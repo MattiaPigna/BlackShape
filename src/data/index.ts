@@ -33,9 +33,9 @@ export const HAIRCUTS: HaircutEntry[] = [
     imgAlt: 'Classico — Low Fade',
     products: ['Brillantina N°5', 'Pomata Opaca', 'Fissativo Extra Hold'],
     steps: [
-      'Sgrassare con shampoo detox, asciugare con telo caldo.',
-      'Applicare la pomata sui capelli umidi, pettinare indietro.',
-      'Definire la riga laterale con rasoio dritto e sigillare.',
+      'Lava i capelli e asciuga con il phon tenendo la forma naturale.',
+      'Applica una piccola quantità di pomata sui capelli ancora leggermente umidi.',
+      'Pettina tutto indietro o di lato e lascia asciugare senza toccare.',
     ],
   },
   {
@@ -48,9 +48,9 @@ export const HAIRCUTS: HaircutEntry[] = [
     imgAlt: 'Zero — Skin Fade',
     products: ['Cera Opaca Matt', 'Balsamo Nutriente', 'Spray Finishing Platino'],
     steps: [
-      'Rasare i fianchi a zero con lama affilata, sfumatura precisa.',
-      'Strutturare la sommità con cera opaca distribuita a dita.',
-      'Rifinire la nuca con linea netta e pulita.',
+      'Dopo la doccia, asciuga completamente i capelli con il phon.',
+      'Distribuisci la cera opaca a dita sulla sommità, dai radice a punta.',
+      'Modella la forma con le mani e lascia asciugare senza pettinare.',
     ],
   },
   {
@@ -63,9 +63,9 @@ export const HAIRCUTS: HaircutEntry[] = [
     imgAlt: 'Sfumato — Taper Soft',
     products: ['Olio Nutriente', 'Crema Volumizzante', 'Lacca Leggera'],
     steps: [
-      'Tagliare con forbici scalate, rispettare la forma naturale.',
-      'Sfumare gradualmente nuca e tempie con pettine e clipper.',
-      'Distribuire olio sui capelli finiti per lucentezza senza peso.',
+      'Lava i capelli e asciuga con il phon a bassa temperatura per non rovinare la forma.',
+      'Applica qualche goccia di olio sui capelli asciutti per lucentezza naturale.',
+      'Pettina seguendo la forma del taglio senza forzare, il risultato viene da solo.',
     ],
   },
   {
@@ -78,9 +78,9 @@ export const HAIRCUTS: HaircutEntry[] = [
     imgAlt: 'Burst High — Burst Fade',
     products: ['Gel Forte', 'Siero Controllo Frizz', "Cera d'Api"],
     steps: [
-      "Eseguire burst fade dietro l'orecchio con precisione.",
-      'Strutturare il top con gel forte, forma a onde o liscia.',
-      'Ripassare le linee con rasoio elettrico per un risultato netto.',
+      'Asciuga i capelli completamente con il phon, spingendo il volume verso l\'alto.',
+      'Applica il gel sulla sommità e modella la forma con le mani.',
+      'Lascia asciugare senza toccare per mantenere la forma tutto il giorno.',
     ],
   },
   {
@@ -93,9 +93,9 @@ export const HAIRCUTS: HaircutEntry[] = [
     imgAlt: 'Bald Contrast — Bald Fade',
     products: ['Crema Rasatura', 'Aftershave Lenitivo', 'Siero Idratante Post'],
     steps: [
-      'Rasare la base con lama da barbiere per un effetto pelle a vista.',
-      'Creare contrasto netto tra rasato e capello con transizione zero.',
-      'Applicare aftershave raffreddante per una pelle luminosa.',
+      'Idrata la pelle rasata ogni mattina con il siero idratante per evitare irritazioni.',
+      'Applica la cera sulla parte superiore e modella con le dita.',
+      'Usa lo spray finishing per un effetto pulito e definito tutto il giorno.',
     ],
   },
   {
@@ -108,9 +108,9 @@ export const HAIRCUTS: HaircutEntry[] = [
     imgAlt: 'Caesar Slick — Caesar Cut Slick Back',
     products: ['Pomata Heavy Hold', 'Brillantina Vintage', 'Fissativo Finale'],
     steps: [
-      'Tagliare con lunghezza uniforme sopra, pettinare tutto indietro.',
-      'Applicare pomata pesante da radice a punta, lavorare il volume.',
-      'Piastare se necessario e fissare con lacca leggera.',
+      'Asciuga con il phon spingendo tutti i capelli verso dietro fin da subito.',
+      'Applica la pomata da radice a punta lavorando con entrambe le mani.',
+      'Pettina tutto all\'indietro e passa la brillantina per un effetto lucido e compatto.',
     ],
   },
 ];

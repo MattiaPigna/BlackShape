@@ -253,7 +253,7 @@ export default function Admin() {
 
                 {/* Steps */}
                 <div className={styles.formSection}>
-                  <p className={styles.sectionLabel}>Tutorial (3 passi)</p>
+                  <p className={styles.sectionLabel}>Come acconciarlo (3 passi)</p>
                   {[0, 1, 2].map(i => (
                     <label key={i} className={styles.field}>
                       <span>Passo {i + 1}</span>

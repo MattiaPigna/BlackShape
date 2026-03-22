@@ -95,7 +95,7 @@ function DetailView({ cut, onBack }: { cut: HaircutEntry; onBack: () => void }) 
           </ul>
         </div>
         <div className={styles.detailCol}>
-          <p className={styles.detailHead}>Come si fa</p>
+          <p className={styles.detailHead}>Come acconciarlo</p>
           <ol className={styles.stepsList}>
             {cut.steps.map((s, i) => (
               <li key={i}>
