@@ -1,0 +1,82 @@
+.section {
+  padding: 6rem 1.5rem;
+  background: var(--grigio);
+  position: relative;
+  overflow: hidden;
+}
+.topLine {
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.2), transparent);
+}
+.inner { max-width: 900px; margin: 0 auto; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4rem;
+}
+@media (min-width: 1024px) {
+  .grid { grid-template-columns: 1fr 1fr; align-items: start; }
+}
+
+/* Contacts */
+.contacts { display: flex; flex-direction: column; gap: 1.5rem; }
+.contactRow { display: flex; align-items: flex-start; gap: 1rem; }
+.iconBox {
+  width: 2rem; height: 2rem;
+  background: var(--sangue);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 0.125rem;
+}
+.contactLabel {
+  font-size: 0.65rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: rgba(245,245,245,0.4);
+  margin-bottom: 0.2rem;
+}
+.contactMain { font-family: var(--font-serif); font-size: 1.1rem; color: var(--avorio); }
+.contactSub  { font-size: 0.85rem; color: rgba(245,245,245,0.55); }
+
+/* Form */
+.formCard {
+  background: var(--nero);
+  border: 1px solid rgba(245,245,245,0.06);
+  padding: 2rem;
+}
+.formTitle {
+  font-size: 0.65rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--sangue);
+  margin-bottom: 1.5rem;
+}
+.form { display: flex; flex-direction: column; gap: 1.25rem; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.field { display: flex; flex-direction: column; }
+
+.label {
+  font-size: 0.65rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: rgba(245,245,245,0.4);
+  margin-bottom: 0.5rem;
+}
+
+.input, .select, .textarea {
+  background: var(--grigio);
+  border: 1px solid rgba(245,245,245,0.08);
+  color: var(--avorio);
+  font-size: 0.88rem;
+  font-family: var(--font-sans);
+  padding: 0.75rem 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.input::placeholder, .textarea::placeholder { color: rgba(245,245,245,0.2); }
+.input:focus, .select:focus, .textarea:focus { border-color: var(--sangue); }
+.select { appearance: none; cursor: pointer; }
+.textarea { resize: none; }
+
+.submit { width: 100%; justify-content: center; }
+.formMsg {
+  font-size: 0.78rem;
+  text-align: center;
+  color: var(--oro);
+  animation: fadeIn 0.3s ease;
+}

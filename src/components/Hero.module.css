@@ -1,0 +1,121 @@
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 2rem 5rem;
+  padding-left: max(2rem, calc(50vw - 660px));
+  background: #000;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated glow blob */
+.hero::before {
+  content: '';
+  position: absolute;
+  width: 70vw;
+  height: 70vw;
+  max-width: 800px;
+  max-height: 800px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,0,0,0.18) 0%, transparent 70%);
+  top: 10%;
+  left: -15%;
+  animation: bgPulse 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Second blob, offset */
+.hero::after {
+  content: '';
+  position: absolute;
+  width: 40vw;
+  height: 40vw;
+  max-width: 500px;
+  max-height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,0,0,0.08) 0%, transparent 70%);
+  bottom: 5%;
+  right: 10%;
+  animation: bgPulse 18s ease-in-out infinite reverse;
+  pointer-events: none;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+}
+
+.eyebrow {
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--sangue);
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(3.5rem, 9vw, 7.5rem);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--avorio);
+  margin-bottom: 2rem;
+}
+
+.sub {
+  font-family: var(--font-cormo);
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-style: italic;
+  color: rgba(245,245,245,0.45);
+  line-height: 1.7;
+  margin-bottom: 3rem;
+}
+
+.ctas {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+.ctaLink {
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--avorio);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: color 0.2s;
+}
+.ctaLink:hover { color: var(--sangue); }
+.ctaLine {
+  display: block;
+  width: 2.5rem;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.3s ease;
+}
+.ctaLink:hover .ctaLine { width: 4rem; }
+
+.ctaSecondary {
+  font-family: var(--font-cormo);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: rgba(245,245,245,0.35);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.ctaSecondary:hover { color: var(--oro); }
+
+.redLine {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent 20%, var(--sangue) 50%, transparent 80%);
+  opacity: 0.5;
+}

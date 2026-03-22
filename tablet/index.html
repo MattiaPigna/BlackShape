@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BlackShape — Catalogo Tagli</title>
+  <meta name="description" content="Catalogo interattivo tagli BlackShape — tutorial, prodotti e sfumature." />
+
+  <!-- Tailwind config MUST precede CDN script -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            nero:    '#000000',
+            avorio:  '#F5F5F5',
+            sangue:  '#8B0000',
+            sangue2: '#A50000',
+            oro:     '#C9A84C',
+            grigio:  '#1A1A1A',
+            fumo:    '#2A2A2A',
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            cormo: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans:  ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/base.css" />
+  <link rel="stylesheet" href="../css/tablet.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     TABLET APP SHELL
+════════════════════════════════════════════ -->
+<div class="tablet-app">
+
+  <!-- Top bar -->
+  <header class="tablet-topbar">
+    <div class="topbar-brand">
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" fill="#8B0000"/>
+        <path d="M9 7 C9 7 8 14 14 14 C20 14 19 7 19 7" stroke="#F5F5F5" stroke-width="1.5" fill="none"/>
+        <line x1="14" y1="14" x2="14" y2="22" stroke="#F5F5F5" stroke-width="1.5"/>
+        <line x1="10" y1="19" x2="18" y2="19" stroke="#F5F5F5" stroke-width="1.5"/>
+      </svg>
+      <div>
+        <p class="topbar-brand-name">BLACKSHAPE</p>
+        <p class="topbar-title">Catalogo Tagli</p>
+      </div>
+    </div>
+
+    <a href="../" class="topbar-back">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Torna al sito
+    </a>
+  </header>
+
+  <!-- Split body -->
+  <div class="tablet-body">
+
+    <!-- LEFT: Sidebar -->
+    <aside class="t-sidebar" id="t-sidebar">
+      <div class="t-sidebar-header">
+        <p class="t-sidebar-label">Repertorio</p>
+        <p class="t-sidebar-count">
+          6 <span>tagli disponibili</span>
+        </p>
+      </div>
+      <nav id="t-sidebar-list" role="list" aria-label="Lista tagli">
+        <!-- Rendered by tablet.js -->
+      </nav>
+    </aside>
+
+    <!-- RIGHT: Detail panel -->
+    <main class="t-detail" id="t-detail" role="main" aria-live="polite">
+      <!-- Rendered by tablet.js -->
+    </main>
+
+  </div><!-- /tablet-body -->
+</div><!-- /tablet-app -->
+
+<script src="../js/data.js"></script>
+<script src="../js/tablet.js"></script>
+</body>
+</html>

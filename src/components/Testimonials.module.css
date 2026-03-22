@@ -1,0 +1,38 @@
+.section { padding: 6rem 1.5rem; background: var(--nero); }
+.inner { max-width: 1280px; margin: 0 auto; }
+.header { text-align: center; margin-bottom: 3.5rem; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@media (min-width: 768px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+.card {
+  background: #111;
+  border: 1px solid rgba(245,245,245,0.06);
+  padding: 1.75rem;
+  position: relative;
+}
+.quoteIcon {
+  font-family: var(--font-serif);
+  font-size: 5rem;
+  line-height: 1;
+  color: rgba(139,0,0,0.25);
+  position: absolute; top: 0.5rem; right: 1.5rem;
+}
+.text {
+  font-size: 0.88rem;
+  color: rgba(245,245,245,0.7);
+  line-height: 1.75;
+  font-style: italic;
+}
+.author {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--oro);
+  margin-top: 1rem;
+}
+.stars { color: #8B0000; font-size: 0.75rem; margin-top: 0.3rem; }
