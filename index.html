@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>BLACKBLADE — Barberia</title>
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/" } }
+</script>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div class="vignette"></div>
+
+  <!-- LOGO -->
+  <header class="brand">
+    <svg class="razor" viewBox="0 0 120 40" aria-hidden="true">
+      <path d="M4 22 L70 10 Q78 9 80 14 L82 20 L8 26 Z" fill="#d11a1a"/>
+      <path d="M8 26 L82 20" stroke="#ff4d4d" stroke-width="1"/>
+      <path d="M80 14 Q92 16 116 30 Q118 34 112 33 L82 22 Z" fill="#e8e2d6"/>
+      <circle cx="81" cy="17" r="2.4" fill="#111" stroke="#e8e2d6" stroke-width="1"/>
+    </svg>
+    <div>
+      <h1>BLACKBLADE</h1>
+      <p class="tag">Barberia · <em>Un taglio che non potrai rifiutare</em></p>
+    </div>
+  </header>
+
+  <!-- PANNELLO SINISTRO -->
+  <aside class="panel left">
+    <h2><span>I</span> La Famiglia</h2>
+    <div id="heads" class="heads"></div>
+
+    <h2><span>II</span> Colore</h2>
+    <div id="colors" class="swatches"></div>
+
+    <h2><span>III</span> Barba</h2>
+    <div id="beards" class="chips"></div>
+
+    <h2><span>IV</span> Accessori</h2>
+    <div class="chips">
+      <button id="hatBtn" class="chip">Fedora</button>
+    </div>
+  </aside>
+
+  <!-- PANNELLO DESTRO -->
+  <aside class="panel right">
+    <h2><span>✦</span> I Tagli</h2>
+    <div id="cuts" class="cuts"></div>
+  </aside>
+
+  <!-- INFO TAGLIO -->
+  <footer class="info">
+    <div class="cut-it" id="cutIt"></div>
+    <div class="cut-name" id="cutName"></div>
+    <div class="cut-desc" id="cutDesc"></div>
+    <div class="views">
+      <button data-view="front">Fronte</button>
+      <button data-view="side">Profilo</button>
+      <button data-view="back">Nuca</button>
+      <button id="spinBtn" class="on">⟳ Ruota</button>
+    </div>
+  </footer>
+
+  <div id="loading" class="loading">Il Don sta arrivando…</div>
+
+  <div id="hint" class="hint">
+    <div class="hand">☝</div>
+    Trascina per ruotare · Pizzica o rotella per lo zoom
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
