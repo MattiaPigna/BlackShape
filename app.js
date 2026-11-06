@@ -11,6 +11,17 @@ const LITE = Q.has('lite');
    DATI
    ========================================================================= */
 const HEADS = [
+  { id: 'capo', name: 'Il Capo', role: 'Testa calva da modello', skin: '#c29a80',
+    jaw: 0.1, jowl: 0.0, chinF: 1.0, nose: 1.0, brow: 1.0, browHair: 1.0, lid: 1.4, recede: 0.02, age: 0.4,
+    cut: 'midfade', color: 'nero', beard: 'none',
+    // testa calva (GLB convertito con tools/prepara-modello.mjs): niente capelli scolpiti da radere
+    model: 'modelli/capo.bbm', bald: true, bust: true, bustDy: 0.27,
+    sculptMustache: true,       // il modello ha gia' baffi e sopracciglia scolpiti
+    // attaccatura misurata sul modello: [azimut, altezza] (0 = fronte, PI = nuca)
+    hl: [[0, 0.6], [0.45, 0.57], [0.75, 0.5], [0.98, 0.3], [1.12, 0.05], [1.24, -0.04], [1.42, 0.2],
+      [1.82, 0.2], [2.15, -0.22], [2.6, -0.42], [Math.PI, -0.46]],
+    thick: [0, 0], beardDy: 0, hatPos: [0, 0.55, -0.04], hatScale: 1.1,
+    outfit: { suit: '#0d0d0f', shirt: '#ece6da', tie: 'long', tieColor: '#8f0d12', rose: false } },
   { id: 'don', name: 'Il Don', role: 'Il capofamiglia', skin: '#b08a72',
     jaw: 0.13, jowl: 0.045, chinF: 0.9, nose: 1.15, brow: 1.3, browHair: 1.35, lid: 1.52, recede: 0.07, age: 1,
     cut: 'slick', color: 'brizzolato', beard: 'baffi',
@@ -19,6 +30,7 @@ const HEADS = [
     // attaccatura reale del modello: [azimut, altezza] (0 = fronte, PI = nuca)
     hl: [[0, 0.8], [0.5, 0.77], [0.8, 0.63], [1.0, 0.44], [1.1, 0.2], [1.27, 0.02], [1.4, 0.3],
       [1.85, 0.3], [2.05, -0.08], [2.4, -0.24], [Math.PI, -0.26]],
+    sculptMustache: true,       // baffi gia' scolpiti nel modello
     thick: [0.03, 0.07],        // spessore dei capelli scolpiti da "radere": lati, sommita'
     beardDy: -0.04,             // bocca/baffi un po' piu' in basso rispetto alla testa procedurale
     hatPos: [0, 0.6, -0.06], hatScale: 1.22,
@@ -68,83 +80,173 @@ function curve(pts, x) {
 //  px,py,pz = direzione sulla sfera unitaria (z = davanti, y = su)
 //  ax = |px|, aa = |azimut| (0 = fronte, PI = nuca), e = distanza sopra l'attaccatura
 //  top = quanto siamo sulla calotta, hy/ny = altezza e normale verticale della testa
+
+/* ---------- SFUMATURE ----------
+   Rialzo della macchinetta -> lunghezza nel modello (0 = a pelle).
+   I valori sono "visivi": 0 = pelle, 1 = ombra scura, 3-4 = capello corto pieno. */
+function guard(n) {
+  return curve([[0, 0.0003], [0.5, 0.0022], [1, 0.0042], [1.5, 0.006], [2, 0.0085],
+    [3, 0.013], [4, 0.018], [6, 0.026], [8, 0.034]], n);
+}
+// altezza della linea di sfumatura in funzione dell'azimut (0 fronte, PI nuca)
+// riferimenti: orecchio ~ -0.06, tempia ~ 0.22, cresta parietale ~ 0.42
+const FADE_LINES = {
+  low:  [[0.9, 0.1], [1.3, 0.02], [1.7, 0.0], [2.3, -0.12], [Math.PI, -0.26]],
+  mid:  [[0.9, 0.26], [1.3, 0.2], [1.7, 0.18], [2.3, 0.08], [Math.PI, -0.04]],
+  high: [[0.9, 0.42], [1.3, 0.38], [1.7, 0.37], [2.3, 0.3], [Math.PI, 0.22]],
+  // drop: alta sopra l'orecchio, poi "cade" dietro l'orecchio verso la nuca
+  drop: [[0.9, 0.26], [1.3, 0.2], [1.75, 0.2], [2.2, 0.1], [2.6, -0.16], [Math.PI, -0.24]],
+};
+const FADE_BAND = { low: 0.08, mid: 0.16, high: 0.28, drop: 0.16 };
+const EAR = new THREE.Vector3(0.97, -0.06, -0.14).normalize();
+/* Lunghezza dei lati per una sfumatura.
+   o.line: 'low' | 'mid' | 'high' | 'drop'   o.burst: sfumatura a semicerchio attorno all'orecchio
+   o.from: rialzo in basso (0 = skin fade)   o.to: rialzo alla linea   o.up: rialzo sopra la linea
+   o.blend: quanto e' morbido il passaggio sopra la linea */
+function fade(i, o) {
+  const hl = i.py - i.e;                    // altezza dell'attaccatura in questo punto
+  let t;
+  if (o.burst) {
+    const d = Math.acos(clamp(i.ax * EAR.x + i.py * EAR.y + i.pz * EAR.z, -1, 1));
+    t = smooth(o.r0 ?? 0.12, o.r1 ?? 0.62, d);
+    const n = mix(o.from, o.to, t);
+    return guard(mix(n, o.up ?? o.to, smooth(o.r1 ?? 0.62, (o.r1 ?? 0.62) + (o.blend ?? 0.2), d)));
+  }
+  // la linea resta sempre un po' sopra l'attaccatura (es. sopra l'orecchio), cosi' la fascia a pelle c'e' sempre
+  const ly = Math.max(curve(FADE_LINES[o.line], i.aa), hl + FADE_BAND[o.line]);
+  t = ly > hl + 0.02 ? smooth(hl, ly, i.py) : 1;
+  const n = mix(o.from, o.to, Math.sqrt(t));
+  return guard(mix(n, o.up ?? o.to, smooth(ly, ly + (o.blend ?? 0.2), i.py)));
+}
+// zona "sopra" (calotta) dove comanda il taglio superiore
+const crown = (i, a = 0.3, b = 0.6) => smooth(a, b, i.py);
+
 const CUTS = [
-  { id: 'slick', name: 'Slick Back', it: "Pettinato all'indietro",
+  /* ----------------------------- CLASSICI ----------------------------- */
+  { id: 'slick', group: 'Classici', name: 'Slick Back', it: "Pettinato all'indietro",
     desc: "Il classico del Don: lunghezze sopra, lati sfumati a forbice e brillantina a specchio.",
     flow: [0, 0.3, 1], rough: 0.34,
     f(i) {
-      const side = mix(0.008, 0.026, smooth(-0.45, 0.35, i.py));
+      const side = fade(i, { line: 'low', from: 2, to: 4, up: 6, blend: 0.3 });
       const top = 0.045 * i.top + 0.024 * smooth(0.1, 0.8, i.pz) * smooth(0.3, 0.7, i.py);
-      return { len: side + top };
+      return { len: mix(side, side * 0.6 + top, crown(i, 0.25, 0.6)) };
     } },
-  { id: 'sidepart', name: 'Side Part', it: 'Riga laterale',
+  { id: 'sidepart', group: 'Classici', name: 'Side Part', it: 'Riga laterale',
     desc: "Riga netta da un lato, volume morbido sull'altro. L'eleganza del consigliere.",
     flow: [0.42, 0.82, 0.38], rough: 0.42,
     f(i) {
-      const side = mix(0.006, 0.022, smooth(-0.45, 0.35, i.py));
+      const side = fade(i, { line: 'low', from: 1.5, to: 3, up: 5, blend: 0.3 });
       const top = 0.04 * i.top + 0.026 * smooth(0.2, 0.8, i.pz) * smooth(0.35, 0.7, i.py) * smooth(0.35, -0.2, i.px);
       const part = g(i.px - 0.3, 0.035) * smooth(0.25, 0.5, i.py) * smooth(-0.45, 0.15, i.pz);
-      return { len: mix(side + top, 0.003, part * 0.92) };
+      return { len: mix(mix(side, side * 0.6 + top, crown(i, 0.25, 0.6)), 0.003, part * 0.92) };
     } },
-  { id: 'pompadour', name: 'Pompadour', it: 'Ciuffo alto',
+  { id: 'pompadour', group: 'Classici', name: 'Pompadour', it: 'Ciuffo alto',
     desc: "Onda alta e voluminosa sulla fronte, lati corti e lucidi. Puro stile anni '50.",
     flow: [0, 0.15, 1], rough: 0.3,
     f(i) {
-      const side = mix(0.006, 0.02, smooth(-0.45, 0.3, i.py));
+      const side = fade(i, { line: 'mid', from: 1, to: 3, up: 4, blend: 0.2 });
       const pm = smooth(-0.2, 0.5, i.pz) * g(i.px, 0.45) * smooth(0.2, 0.6, i.py);
       return { len: side + 0.04 * i.top + 0.22 * pm, dz: 0.07 * pm * smooth(0.2, 0.8, i.pz), dy: 0.05 * pm };
     } },
-  { id: 'taper', name: 'Taper Fade', it: 'Sfumatura bassa',
-    desc: "Sfumatura graduale dalla nuca alle tempie, sopra corto e pettinato con ordine.",
-    flow: [0, 0.75, -0.65], rough: 0.55,
-    f(i) {
-      const side = mix(0.002, 0.02, smooth(-0.4, 0.25, i.py));
-      return { len: side + 0.022 * i.top + 0.012 * smooth(0.3, 0.9, i.pz) * i.top };
-    } },
-  { id: 'crop', name: 'French Crop', it: 'Crop con skin fade',
-    desc: "Sfumatura alta a pelle, sopra texture corta e frangia netta sulla fronte.",
-    flow: [0, 0.55, -0.85], rough: 0.78, edge: 0.012,
-    f(i) {
-      const side = mix(0.0, 0.014, smooth(0.05, 0.42, i.py));
-      const fr = smooth(0.5, 0.88, i.pz) * smooth(0.3, 0.5, i.py) * g(i.px, 0.5) * (1 - smooth(0.0, 0.12, i.e));
-      return { len: side + 0.022 * i.top + 0.006 * fr, dz: 0.03 * fr, dy: -0.06 * fr };
-    } },
-  { id: 'buzz', name: 'Buzz Cut', it: 'Rasato a macchinetta',
-    desc: "Macchinetta uniforme su tutta la testa. Pulito, deciso, senza compromessi.",
-    flow: [0, 0.75, -0.65], rough: 0.85,
-    f() { return { len: 0.006 }; } },
-  { id: 'crew', name: 'Crew Cut', it: 'Taglio militare',
-    desc: "Corto ai lati, qualche centimetro sopra che sale verso la fronte.",
-    flow: [0, 0.75, -0.65], rough: 0.6,
-    f(i) {
-      const side = mix(0.005, 0.016, smooth(-0.4, 0.3, i.py));
-      const fr = smooth(0.2, 0.9, i.pz) * i.top;
-      return { len: side + 0.018 * i.top + 0.018 * fr, dy: 0.012 * fr };
-    } },
-  { id: 'undercut', name: 'Undercut', it: 'Lati rasati',
-    desc: "Lati e nuca rasati, sopra lungo e tirato indietro. Un contrasto che non perdona.",
-    flow: [0, 0.3, 1], rough: 0.3,
-    f(i) {
-      const k = smooth(0.34, 0.42, i.py);
-      return { len: mix(0.0025, 0.05 + 0.03 * smooth(0.2, 0.8, i.pz), k), dy: 0.012 * k };
-    } },
-  { id: 'quiff', name: 'Quiff', it: 'Ciuffo spettinato',
+  { id: 'quiff', group: 'Classici', name: 'Quiff', it: 'Ciuffo spettinato',
     desc: "Ciuffo in avanti e in su con finitura opaca, sfumatura media ai lati.",
     flow: [0, 0.2, 1], rough: 0.62,
     f(i) {
-      const side = mix(0.003, 0.018, smooth(-0.2, 0.35, i.py));
+      const side = fade(i, { line: 'mid', from: 0.5, to: 2, up: 3.5 });
       const q = smooth(0.0, 0.6, i.pz) * g(i.px, 0.4) * smooth(0.3, 0.62, i.py);
       return { len: side + 0.035 * i.top + 0.085 * q, dz: 0.05 * q * smooth(0.4, 0.9, i.pz), dy: 0.03 * q };
     } },
-  { id: 'flattop', name: 'Flat Top', it: 'Spazzola piatta',
+  { id: 'crew', group: 'Classici', name: 'Crew Cut', it: 'Taglio militare',
+    desc: "Corto ai lati, qualche centimetro sopra che sale verso la fronte.",
+    flow: [0, 0.75, -0.65], rough: 0.6,
+    f(i) {
+      const side = fade(i, { line: 'low', from: 1, to: 2, up: 3 });
+      const fr = smooth(0.2, 0.9, i.pz) * i.top;
+      return { len: mix(side, 0.018 + 0.018 * fr, crown(i, 0.35, 0.6)), dy: 0.012 * fr };
+    } },
+  { id: 'flattop', group: 'Classici', name: 'Flat Top', it: 'Spazzola piatta',
     desc: "Sopra squadrato e perfettamente piatto, lati sfumati. Precisione da maestro.",
     flow: [0, 1, 0.001], rough: 0.72,
     f(i) {
-      const side = mix(0.003, 0.016, smooth(-0.4, 0.3, i.py));
+      const side = fade(i, { line: 'mid', from: 0.5, to: 2, up: 3 });
       const m = smooth(0.42, 0.62, i.py);
       const flat = clamp((1.13 - i.hy) / Math.max(i.ny, 0.35), 0.016, 0.28);
       return { len: mix(side, flat, m) };
     } },
+  { id: 'buzz', group: 'Classici', name: 'Buzz Cut', it: 'Rasato a macchinetta',
+    desc: "Macchinetta uniforme su tutta la testa. Pulito, deciso, senza compromessi.",
+    flow: [0, 0.75, -0.65], rough: 0.85,
+    f() { return { len: guard(1.5) }; } },
+  { id: 'undercut', group: 'Classici', name: 'Undercut', it: 'Lati rasati',
+    desc: "Lati e nuca rasati, sopra lungo e tirato indietro. Un contrasto che non perdona.",
+    flow: [0, 0.3, 1], rough: 0.3,
+    f(i) {
+      const k = smooth(0.34, 0.42, i.py);
+      return { len: mix(guard(0.5), 0.05 + 0.03 * smooth(0.2, 0.8, i.pz), k), dy: 0.012 * k };
+    } },
+
+  /* ----------------------------- MODERNI ------------------------------ */
+  { id: 'lowfade', group: 'Moderni', name: 'Low Skin Fade', it: 'Sfumatura bassa a pelle',
+    desc: "A pelle sopra l'orecchio e sulla nuca, poi sale piano. Sopra corto e mosso in avanti.",
+    flow: [0, 0.6, -0.8], rough: 0.7,
+    f(i) {
+      const side = fade(i, { line: 'low', from: 0, to: 2, up: 4 });
+      const top = 0.026 + 0.01 * smooth(0.3, 0.9, i.pz);
+      return { len: mix(side, top, crown(i, 0.32, 0.6)) };
+    } },
+  { id: 'midfade', group: 'Moderni', name: 'Mid Skin Fade', it: 'Sfumatura media a pelle',
+    desc: "La sfumatura sale fino alla tempia. Il taglio piu' richiesto: pulito ma non estremo.",
+    flow: [0.35, 0.8, 0.45], rough: 0.55,
+    f(i) {
+      const side = fade(i, { line: 'mid', from: 0, to: 2, up: 4 });
+      const top = 0.03 + 0.012 * smooth(0.2, 0.8, i.pz) * smooth(0.4, -0.2, i.px);
+      return { len: mix(side, top, crown(i, 0.4, 0.62)), dy: 0.006 * i.top };
+    } },
+  { id: 'highfade', group: 'Moderni', name: 'High Skin Fade', it: 'Sfumatura alta a pelle',
+    desc: "Lati a pelle fino alla cresta della testa. Sopra solo pochi centimetri: deciso e moderno.",
+    flow: [0, 0.6, -0.8], rough: 0.72,
+    f(i) {
+      const side = fade(i, { line: 'high', from: 0, to: 1.5, up: 3, blend: 0.08 });
+      return { len: mix(side, 0.024 + 0.006 * smooth(0.3, 0.9, i.pz), crown(i, 0.5, 0.66)) };
+    } },
+  { id: 'taper', group: 'Moderni', name: 'Taper Fade', it: 'Sfumatura solo ai bordi',
+    desc: "Sfumata solo basette e nuca, il resto resta pieno. Pulito senza togliere volume.",
+    flow: [0.3, 0.85, 0.4], rough: 0.5,
+    f(i) {
+      // la sfumatura vive solo vicino all'attaccatura (basetta e nuca)
+      const edge = smooth(0.0, 0.16, i.e);
+      const side = guard(mix(0, 4, edge));
+      const top = 0.032 + 0.012 * smooth(0.2, 0.8, i.pz);
+      return { len: mix(side, top, crown(i, 0.25, 0.6)) };
+    } },
+  { id: 'dropfade', group: 'Moderni', name: 'Drop Fade', it: "Sfumatura che scende dietro l'orecchio",
+    desc: "La linea sale sopra l'orecchio e cade verso la nuca. Ciuffo morbido in avanti.",
+    flow: [0, 0.25, 1], rough: 0.55,
+    f(i) {
+      const side = fade(i, { line: 'drop', from: 0, to: 2, up: 4 });
+      const q = smooth(0.0, 0.6, i.pz) * g(i.px, 0.45) * smooth(0.3, 0.62, i.py);
+      return { len: mix(side, 0.03 + 0.05 * q, crown(i, 0.35, 0.6)), dz: 0.03 * q, dy: 0.02 * q };
+    } },
+  { id: 'burst', group: 'Moderni', name: 'Burst Fade', it: "Sfumatura a raggiera sull'orecchio",
+    desc: "Semicerchio a pelle attorno all'orecchio, nuca piena. Cresta centrale testurizzata.",
+    flow: [0, 0.6, -0.8], rough: 0.75,
+    f(i) {
+      const side = fade(i, { burst: true, from: 0, to: 2, up: 4, r0: 0.1, r1: 0.6 });
+      const ridge = g(i.px, 0.28) * smooth(0.2, 0.55, i.py);
+      return { len: mix(side, 0.025 + 0.03 * ridge, crown(i, 0.4, 0.65) * mix(0.4, 1, ridge)), dy: 0.02 * ridge };
+    } },
+  { id: 'crop', group: 'Moderni', name: 'Textured Crop', it: 'Crop con skin fade',
+    desc: "Sfumatura media a pelle, sopra texture corta e frangia netta sulla fronte.",
+    flow: [0, 0.55, -0.85], rough: 0.78, edge: 0.012,
+    f(i) {
+      const side = fade(i, { line: 'mid', from: 0, to: 1.5, up: 3, blend: 0.1 });
+      const fr = smooth(0.5, 0.88, i.pz) * smooth(0.3, 0.5, i.py) * g(i.px, 0.5) * (1 - smooth(0.0, 0.12, i.e));
+      return { len: mix(side, 0.024, crown(i, 0.4, 0.62)) + 0.006 * fr, dz: 0.03 * fr, dy: -0.06 * fr };
+    } },
+  { id: 'buzzfade', group: 'Moderni', name: 'Buzz Fade', it: 'Rasato con sfumatura',
+    desc: "Rialzo 2 sopra, sfumato a pelle sui lati. Il minimo indispensabile, fatto bene.",
+    flow: [0, 0.75, -0.65], rough: 0.85,
+    f(i) { return { len: fade(i, { line: 'mid', from: 0, to: 2, up: 2.5 }) }; } },
 ];
 
 const BEARDS = [
@@ -156,7 +258,7 @@ const BEARDS = [
   { id: 'piena', name: 'Barba piena' },
 ];
 
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
 
 /* =========================================================================
    FORMA DELLA TESTA
@@ -282,17 +384,38 @@ function makeHairMaterial() {
     uB: { value: new THREE.Vector3(0, 1, 0) },
     uGray: { value: 0 },
     uGrayCol: { value: new THREE.Color('#8e8a84') },
+    uHairCol: { value: new THREE.Color('#0d0b0a') },
+    uDensity: { value: +(Q.get('dens') || (LITE ? 80 : 100)) },   // capelli per unita' (piu' alto = piu' fitti e sottili)
+    uRad: { value: +(Q.get('rad') || 0.44) },
+    uShine: { value: 90 },                     // riflesso lungo il capello: alto = stretto e lucido
+    uSpecK: { value: 0.35 },                   // intensita' del riflesso
+    uBump: { value: 0.0035 },                  // profondita' dei solchi della pettinatura                     // spessore del singolo capello nella sua cella
   };
   m.userData.u = u;
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, u);
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute float aHair;\nvarying float vHair;\nvarying vec3 vHPos;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvHair = aHair;\nvHPos = position;');
+      .replace('#include <common>', `#include <common>
+attribute float aHair; attribute vec3 aInner; attribute vec3 aTip; attribute float aLen; attribute vec3 aDir; attribute float aLayer;
+varying float vHair; varying vec3 vHPos; varying vec3 vFDir; varying float vLayer; varying float vLen; varying vec3 vTanV;
+uniform vec3 uFlow;`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+vHair = aHair; vHPos = aTip; vLayer = aLayer; vLen = aLen;
+// strato 0 = sottopelo opaco, strati 1..N = "pelliccia" dalla radice alla punta
+if (aLayer > 0.001) transformed = mix(aInner, aTip, aLayer);
+vec3 dd = normalize(aDir);
+vec3 tf = dd * dot(dd, uFlow) - uFlow; float tl = length(tf);
+tf = tl > 1e-4 ? tf / tl : vec3(0.0, -1.0, 0.0);
+// il capello si piega lungo la direzione di pettinatura salendo verso la punta
+vTanV = normalize(normalMatrix * tf);
+float lie = smoothstep(0.004, 0.03, aLen);
+vFDir = normalize(dd + tf * aLayer * aLayer * lie * min(aLen, 0.06) * 1.6);`);
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
-varying float vHair; varying vec3 vHPos;
+varying float vHair; varying vec3 vHPos; varying vec3 vFDir; varying float vLayer; varying float vLen; varying vec3 vTanV;
 uniform vec3 uFlow; uniform vec3 uT; uniform vec3 uB; uniform float uGray; uniform vec3 uGrayCol;
+uniform vec3 uHairCol; uniform float uDensity; uniform float uRad; uniform float uShine; uniform float uSpecK; uniform float uBump;
+float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float hh(float n){ return fract(sin(n * 12.9898 + 4.1414) * 43758.5453); }
 float pn(float x, float N){ float i = floor(x); float f = fract(x); f = f*f*(3.0-2.0*f);
   return mix(hh(mod(i, N)), hh(mod(i + 1.0, N)), f); }`)
@@ -312,9 +435,73 @@ float strand = mix(0.62, 1.22, hN);
 float gsel = hh(mod(floor(x2), 760.0) + 7.0);
 float grayPick = mix(uGray, smoothstep(1.0 - uGray, 1.0 - uGray + 0.08, gsel), a2) * smoothstep(0.3, 0.8, vHair);
 vec3 hcol = mix(diffuseColor.rgb, uGrayCol * mix(0.85, 0.6 + 0.5 * hh(floor(x2) + 3.0), a2), grayPick * 0.85);
-diffuseColor.rgb = mix(diffuseColor.rgb, hcol * strand, vHair);`)
+diffuseColor.rgb = mix(diffuseColor.rgb, hcol * strand, vHair);
+if (vLayer > 0.001) {
+  // ogni cella della griglia (sulla direzione pettinata) e' un capello: sezione tonda che si assottiglia
+  if (vLen < 0.0005) discard;
+  vec2 cell; float d;
+  float lie = smoothstep(0.012, 0.03, vLen);
+  if (lie > 0.5) {
+    // capelli lunghi e pettinati: ciocche sottili allungate lungo la pettinatura
+    // (x = angolo attorno all'asse di pettinatura, y = distanza lungo la ciocca)
+    // vicino al "polo" della pettinatura le ciocche convergono: ne servono meno
+    float sx = (ph + wob * 1.3) * uDensity * 9.0 * max(sin(th), 0.12);
+    float cx = floor(sx);
+    float sy = th * (2.0 + 2.5 * h21(vec2(cx, 1.0))) + h21(vec2(cx, 2.0)) * 10.0;
+    cell = vec2(cx, floor(sy));
+    d = abs(fract(sx) - 0.5) * 1.6;
+  } else {
+    // capelli corti: ogni cella della griglia e' un capello con sezione tonda
+    vec3 aq = abs(vFDir);
+    vec2 uv = (aq.x > aq.y && aq.x > aq.z) ? vFDir.yz : ((aq.y > aq.z) ? vFDir.xz + 7.0 : vFDir.xy + 13.0);
+    uv *= uDensity;
+    cell = floor(uv);
+    vec2 jit = vec2(h21(cell + 3.1), h21(cell + 7.7)) * 0.4 + 0.3;
+    d = length(fract(uv) - jit);
+  }
+  float r1 = h21(cell), r2 = h21(cell + 17.3);
+  float hl = 0.55 + 0.45 * r1;                  // lunghezza di questo capello rispetto al taglio
+  if (vLayer > hl) discard;
+  float rad = uRad * (1.0 - 0.6 * vLayer / hl);
+  if (d > rad) discard;
+  vec3 hc = mix(uHairCol, uGrayCol * (0.6 + 0.35 * r1), step(r2, uGray));
+  hc *= 0.7 + 0.6 * h21(cell + 31.0);
+  // radice in ombra, punta piu' chiara (anche i capelli neri hanno punte piu' calde/chiare)
+  float tt = vLayer / hl;
+  diffuseColor.rgb = hc * mix(0.35, 1.0, tt) + uHairCol * 0.9 * tt * tt + vec3(0.012, 0.009, 0.007) * tt;
+}`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-roughnessFactor = clamp(roughnessFactor * mix(1.0, 0.65 + 0.7 * (1.0 - hN), vHair), 0.08, 1.0);`);
+roughnessFactor = clamp(roughnessFactor * mix(1.0, 0.65 + 0.7 * (1.0 - hN), vHair), 0.08, 1.0);
+// il sottopelo opaco non deve sembrare plastica: piu' opaco degli strati
+if (vLayer < 0.001) roughnessFactor = max(roughnessFactor, 0.85);
+else roughnessFactor = max(roughnessFactor, 0.42);   // niente effetto plastica neanche con la brillantina`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+// solchi della pettinatura: rilievo ricavato dal rumore delle ciocche (niente texture)
+if (vLayer < 0.001) {
+  float hgt = (hN - 0.5) * uBump * vHair;
+  vec3 sX = dFdx(-vViewPosition), sY = dFdy(-vViewPosition);
+  vec3 R1 = cross(sY, normal), R2 = cross(normal, sX);
+  float det = dot(sX, R1);
+  vec3 grad = sign(det) * (dFdx(hgt) * R1 + dFdy(hgt) * R2);
+  normal = normalize(abs(det) * normal - grad);
+}`)
+      .replace('#include <opaque_fragment>', `// riflesso "da capello" (Kajiya-Kay): una striscia di luce lungo la direzione delle ciocche
+if (vLayer < 0.001 && vHair > 0.01) {
+  vec3 T = normalize(vTanV + normal * (hN - 0.5) * 0.5);
+  vec3 V = normalize(vViewPosition);
+  vec3 L = normalize(vec3(3.5, 4.0, 11.0));          // luce principale (agganciata alla camera)
+  vec3 Hh = normalize(L + V);
+  float a1 = dot(T, Hh);
+  float sp1 = pow(sqrt(max(0.0, 1.0 - a1 * a1)), uShine);
+  vec3 T2 = normalize(T + normal * 0.25); float a2 = dot(T2, Hh);
+  float sp2 = pow(sqrt(max(0.0, 1.0 - a2 * a2)), uShine * 0.3);
+  float vis = clamp(dot(normal, L) * 0.6 + 0.4, 0.0, 1.0);
+  // riflesso spezzato dalle ciocche (hN) e leggermente colorato come il capello
+  float brk = hN * hN * 1.8;
+  vec3 c1 = mix(vec3(0.85, 0.8, 0.75), diffuseColor.rgb * 5.0, 0.35);
+  outgoingLight += vis * vHair * uSpecK * (sp1 * c1 * brk + sp2 * diffuseColor.rgb * 1.5 * (0.6 + 0.8 * hN));
+}
+#include <opaque_fragment>`);
   };
   return m;
 }
@@ -387,12 +574,31 @@ function sampleShellBase(H) {
   return base;
 }
 
+// Numero di strati della "pelliccia" (piu' strati = capelli piu' pieni, ma piu' lavoro per la GPU)
+// ?fur = capelli a strati (pelliccia); di default sono un oggetto 3D pieno
+const FUR_ON = Q.has('fur');
+const FUR_LAYERS = Q.get('layers') ? +Q.get('layers') : (LITE ? 10 : 22);
+// spessore massimo della parte "a strati" sopra il sottopelo opaco
+const FUR_DEPTH = 0.03;
+
 function makeShellMesh(mat) {
   const geo = shellUnit.clone();
   const n = geo.attributes.position.count;
   geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
   geo.setAttribute('aHair', new THREE.BufferAttribute(new Float32Array(n), 1));
-  const mesh = new THREE.Mesh(geo, mat);
+  geo.setAttribute('aInner', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  geo.setAttribute('aTip', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  geo.setAttribute('aLen', new THREE.BufferAttribute(new Float32Array(n), 1));
+  geo.setAttribute('aDir', new THREE.BufferAttribute(shellUnit.attributes.position.array.slice(), 3));
+  // un'istanza per strato: 0 = sottopelo, poi 1/N ... 1 = punta
+  const layers = new Float32Array(FUR_LAYERS + 1);
+  for (let k = 0; k <= FUR_LAYERS; k++) layers[k] = k / FUR_LAYERS;
+  geo.setAttribute('aLayer', new THREE.InstancedBufferAttribute(layers, 1));
+  const mesh = new THREE.InstancedMesh(geo, mat, FUR_LAYERS + 1);
+  const I = new THREE.Matrix4();
+  for (let k = 0; k <= FUR_LAYERS; k++) mesh.setMatrixAt(k, I);
+  if (!FUR_ON) mesh.count = 1;            // di default i capelli sono un unico oggetto pieno
+  mesh.frustumCulled = false;
   mesh.userData.unit = shellUnit.attributes.position.array;
   return mesh;
 }
@@ -416,14 +622,14 @@ function beardLen(id, i, H) {
   const cheek = curve([[0, -0.37], [0.3, -0.36], [0.55, -0.24], [0.85, -0.06], [1.2, -0.02]], i.aa);
   const area = smooth(cheek + 0.01, cheek - 0.04, i.py) * smooth(1.32, 1.15, i.aa);
   const lips = smooth(0.2, 0.16, i.ax) * smooth(-0.605, -0.585, i.py) * smooth(-0.46, -0.48, i.py);
-  const must = (H.model ? 0 : 1) * smooth(-0.49, -0.46, i.py) * smooth(-0.355, -0.385, i.py) * smooth(0.25, 0.19, i.ax) * smooth(0.3, 0.6, i.pz);
+  const must = (H.sculptMustache ? 0 : 1) * smooth(-0.49, -0.46, i.py) * smooth(-0.355, -0.385, i.py) * smooth(0.25, 0.19, i.ax) * smooth(0.3, 0.6, i.pz);
   const chin = smooth(0.27, 0.19, i.ax) * smooth(-0.57, -0.63, i.py) * smooth(-0.1, 0.35, i.pz);
   const corner = smooth(0.27, 0.21, i.ax) * smooth(0.13, 0.17, i.ax) * smooth(-0.44, -0.48, i.py) * smooth(-0.64, -0.58, i.py) * smooth(0.3, 0.6, i.pz);
   const chinLow = smooth(-0.72, -0.95, i.py) * smooth(0.42, 0.2, i.ax) * smooth(-0.1, 0.3, i.pz);
   let len = 0, dy = 0;
   switch (id) {
     case 'ombra': len = 0.004 * area; break;
-    case 'baffi': len = H.model ? 0 : 0.03 * must + 0.02 * corner; break;
+    case 'baffi': len = H.sculptMustache ? 0 : 0.03 * must + 0.02 * corner; break;
     case 'pizzetto': len = Math.max(0.026 * must, 0.03 * Math.max(chin, corner)); break;
     case 'corta': len = 0.022 * area + 0.006 * must; break;
     case 'piena': len = 0.048 * area + 0.05 * chinLow * area; dy = -0.05 * chinLow * area; break;
@@ -435,7 +641,10 @@ function beardLen(id, i, H) {
 function computeShell(kind, mesh, H, base, styleId, colorDef) {
   const unit = mesh.userData.unit;
   const n = unit.length / 3;
-  const pos = new Float32Array(n * 3);
+  const pos = new Float32Array(n * 3);    // sottopelo opaco (strato 0)
+  const inner = new Float32Array(n * 3);  // radice degli strati
+  const tip = new Float32Array(n * 3);    // punta degli strati
+  const lens = new Float32Array(n);
   const col = new Float32Array(n * 3);
   const hair = new Float32Array(n);
   const skin = new THREE.Color(H.skin);
@@ -445,40 +654,47 @@ function computeShell(kind, mesh, H, base, styleId, colorDef) {
   const cut = kind === 'hair' ? CUTS.find((c) => c.id === styleId) : null;
   const edge = cut && cut.edge ? cut.edge : 0.05;
   const c = new THREE.Color();
+  const put = (arr, k, b, off, dy, dz) => {
+    arr[k * 3] = base[b] + base[b + 3] * off;
+    arr[k * 3 + 1] = base[b + 1] + base[b + 4] * off + dy;
+    arr[k * 3 + 2] = base[b + 2] + base[b + 5] * off + dz;
+  };
   for (let k = 0; k < n; k++) {
     const px = unit[k * 3], py = unit[k * 3 + 1], pz = unit[k * 3 + 2];
     fillInfo(px, py, pz, H, base, k);
-    // "off" è continuo: dove è negativo il guscio sprofonda dentro la testa,
-    // così il bordo (attaccatura, contorno barba) risulta morbido e senza scalini
-    let len, off, dy = 0, dz = 0, rawLen = 0;
+    // raw = lunghezza vera del capello (0 = pelle). Il sottopelo opaco sta alla radice degli strati;
+    // dove e' quasi a pelle sprofonda dentro la testa, cosi' il bordo non si vede
+    let raw = 0, dy = 0, dz = 0, shellOff;
+    const SKIN_OFF = 0.0003;
     if (kind === 'hair') {
-      const r = cut.f(info);
       if (info.e > 0) {
-        rawLen = r.len * smooth(0, edge, info.e);
-        len = Math.max(rawLen, 0.0025);
-        off = len; dy = r.dy || 0; dz = r.dz || 0;
-      } else {
-        len = 0.0025;
-        off = Math.max(0.0025 + info.e * 0.15, -0.015);
+        const r = cut.f(info);
+        raw = r.len * smooth(0, edge, info.e);
+        dy = r.dy || 0; dz = r.dz || 0;
       }
     } else {
       if (H.beardDy) info.py -= H.beardDy;
       const r = beardLen(styleId, info, H);
-      len = r.len; dy = r.dy;
-      off = len >= 0.004 ? len : mix(-0.012, 0.004, len / 0.004);
-      if (len < 0.004) dy = 0;
+      raw = r.len; dy = raw >= 0.004 ? r.dy : 0;
     }
+    const tipOff = raw + SKIN_OFF;
+    const rootOff = Math.max(tipOff - FUR_DEPTH, SKIN_OFF);
+    // fuori dalla zona capelli il guscio resta sotto la pelle (stesso valore del bordo: nessuna linea chiara)
+    if (kind === 'hair' && info.e <= 0) shellOff = Math.max(-0.005 + info.e * 0.15, -0.015);
+    else shellOff = raw < 0.0025 ? mix(-0.005, SKIN_OFF, smooth(0, 0.0025, raw)) : (FUR_ON ? rootOff : tipOff);
+    const kr = tipOff > 0 ? rootOff / tipOff : 0;   // spostamenti (ciuffo) proporzionali all'altezza
+    const ks = tipOff > 0 ? clamp(shellOff / tipOff, 0, 1) : 0;
     const b = k * 6;
-    pos[k * 3] = base[b] + base[b + 3] * off;
-    pos[k * 3 + 1] = base[b + 1] + base[b + 4] * off + dy;
-    pos[k * 3 + 2] = base[b + 2] + base[b + 5] * off + dz;
-    const h = smooth(0.0025, 0.022, len);
-    const raw = kind === 'hair' && info.e > 0 ? rawLen : len;
+    put(tip, k, b, tipOff, dy, dz);
+    put(inner, k, b, rootOff, dy * kr, dz * kr);
+    put(pos, k, b, shellOff, dy * ks, dz * ks);
+    lens[k] = raw;
+    const h = smooth(0.0025, 0.022, raw);
     c.copy(skin).lerp(stub, smooth(0.0, 0.006, raw)).lerp(hcDeep, h);
     col[k * 3] = c.r; col[k * 3 + 1] = c.g; col[k * 3 + 2] = c.b;
     hair[k] = h;
   }
-  return { pos, col, hair };
+  return { pos, col, hair, inner, tip, lens };
 }
 
 /* =========================================================================
@@ -729,15 +945,15 @@ async function loadModel(H) {
     const rs = bw[k] > 1e-3 ? bn[k] / bw[k] : R[k];
     const t = (H.thick[0] + H.thick[1] * smooth(0.3, 0.95, py)) * smooth(-0.02, 0.12, E[k]);
     const w = smooth(-0.06, 0.08, E[k]);
-    SURF[k] = mix(R[k], Math.min(R[k], rs - t), w);
+    SURF[k] = H.bald ? R[k] : mix(R[k], Math.min(R[k], rs - t), w);
   }
 
   // "rasatura": i vertici della zona capelli scendono sulla superficie del cranio
   const cls = new Uint8Array(nv);
   for (let v = 0; v < nv; v++) {
     const x = P[v * 3], y = P[v * 3 + 1], z = P[v * 3 + 2];
-    cls[v] = classifyBust(x, y, z);
-    if (cls[v] !== 0) continue;
+    cls[v] = H.bust ? 0 : classifyBust(x, y, z);
+    if (cls[v] !== 0 || H.bald) continue;   // testa calva: niente da radere
     const r = Math.hypot(x, y, z);
     const e = y / r - hairline(Math.abs(Math.atan2(x, z)), H);
     const w = smooth(-0.06, 0.08, e);
@@ -815,7 +1031,7 @@ function colorModel(M, H) {
       c.lerp(brow, 0.8 * g(py - by, 0.045) * smooth(0.08, 0.14, ax) * smooth(0.66, 0.56, ax) * fr);
       c.multiplyScalar(1 - 0.12 * g2(ax - 0.38, py, 0.13) * fr);
       // baffi scolpiti: colore dei capelli se la barba scelta li prevede
-      if (state.beard !== 'none' && state.beard !== 'ombra') {
+      if (H.sculptMustache && state.beard !== 'none' && state.beard !== 'ombra') {
         const m = smooth(-0.355, -0.385, pyb) * smooth(-0.5, -0.47, pyb) * smooth(0.3, 0.24, ax) * fr;
         c.lerp(brow, 0.9 * m);
       }
@@ -924,6 +1140,7 @@ function shellAt(kind, style, H, px, py, pz, out) {
 
 const strandMeshes = {};
 function buildStrands(kind) {
+  if (!Q.has('strands')) return;   // i capelli ora sono fatti a strati; i fili a linee restano solo come opzione
   const H = state.head;
   const style = kind === 'hair' ? state.cut : state.beard;
   const colorDef = COLORS.find((c) => c.id === state.color) || COLORS[0];
@@ -951,7 +1168,8 @@ function buildStrands(kind) {
     shellAt(kind, style, H, d.x, d.y, d.z, S);
     if (!S.ok) continue;
     const L = S.len;
-    if (L < 0.0035 && rand() < 0.6) continue;           // zone rasate: meno fili
+    // zone rasate: meno fili, nessuno dove e' a pelle (sfumature)
+    if (L < 0.0035 && rand() > 0.4 * smooth(0.0006, 0.0035, L)) continue;
     const lie = smooth(0.007, 0.03, L);                   // quanto il filo "si stende" pettinato
     const flowDir = kind === 'beard' && d.y > 0.05 ? BF : F;
     const arc = (0.035 + 0.12 * Math.min(L / 0.06, 1.6)) * lie * (0.7 + 0.6 * rand());
@@ -1022,7 +1240,8 @@ function buildStrands(kind) {
   }
   const rough = kind === 'hair' ? cut.rough : 0.6;
   mesh.material.uniforms.uShine.value = mix(160, 25, rough);
-  mesh.material.uniforms.uSpec.value = mix(0.9, 0.15, rough);
+  // riflesso contenuto: con linee da 1 px un riflesso forte rende i capelli "argentati"
+  mesh.material.uniforms.uSpec.value = mix(0.2, 0.035, rough);
   mesh.material.uniforms.uFade.value = 0;
   mesh.userData.fadeIn = true;
   mesh.visible = !Q.has('nostrands');
@@ -1051,7 +1270,10 @@ let morphs = [];
 let popT = 1;
 
 function disposeGroup(g) {
-  g.traverse((o) => { if (o.geometry && o.geometry !== hairMesh.geometry && o.geometry !== beardMesh.geometry) o.geometry.dispose(); });
+  g.traverse((o) => {
+    // non buttare le geometrie condivise (gusci) ne' il modello in cache
+    if (o.geometry && o.geometry !== hairMesh.geometry && o.geometry !== beardMesh.geometry && o.geometry !== g.userData.keep) o.geometry.dispose();
+  });
 }
 
 let buildToken = 0;
@@ -1074,6 +1296,15 @@ async function buildHead() {
     colorModel(M, H);
     headParts.add(new THREE.Mesh(M.geo, sculptMat));
     headParts.userData.cached = true;
+    if (H.bust) {
+      // solo testa: spalle, camicia e giacca generate
+      const neckMat = skinPlain.clone(); neckMat.color.set(H.skin).multiplyScalar(0.9);
+      const bust = buildBust(H, neckMat);
+      bust.position.y += H.bustDy || 0;     // colletto alzato fino a coprire la fine del collo del modello
+      headParts.add(bust);
+      headParts.userData.cached = false;
+      headParts.userData.keep = M.geo;
+    }
     model.add(headParts);
     shellBase = M.shellBase;
     hairMesh.geometry.setIndex(M.hairIndex);
@@ -1110,6 +1341,9 @@ async function buildHead() {
   popT = 0;
 }
 
+// attributi del guscio animati nel passaggio da un taglio all'altro (nome attributo -> campo di computeShell)
+const SHELL_ATTRS = [['position', 'pos'], ['color', 'col'], ['aHair', 'hair'], ['aInner', 'inner'], ['aTip', 'tip'], ['aLen', 'lens']];
+
 function applyShell(kind, animate = true) {
   const mesh = kind === 'hair' ? hairMesh : beardMesh;
   const colorDef = COLORS.find((c) => c.id === state.color) || COLORS[0];
@@ -1120,13 +1354,14 @@ function applyShell(kind, animate = true) {
     const cut = CUTS.find((c) => c.id === style);
     setFlow(mat, cut.flow);
     mat.roughness = cut.rough;
+    mat.userData.u.uShine.value = mix(220, 35, cut.rough);
+    mat.userData.u.uSpecK.value = mix(0.2, 0.04, cut.rough);
   }
   mat.userData.u.uGray.value = colorDef.gray;
+  mat.userData.u.uHairCol.value.set(colorDef.hex);
   const geo = mesh.geometry;
   if (!animate) {
-    geo.attributes.position.array.set(res.pos);
-    geo.attributes.color.array.set(res.col);
-    geo.attributes.aHair.array.set(res.hair);
+    for (const [name, key] of SHELL_ATTRS) geo.attributes[name].array.set(res[key]);
     finishGeo(geo);
     buildStrands(kind);
     return;
@@ -1135,14 +1370,12 @@ function applyShell(kind, animate = true) {
   morphs = morphs.filter((m) => m.geo !== geo);
   morphs.push({
     geo, kind, t: 0,
-    from: [geo.attributes.position.array.slice(), geo.attributes.color.array.slice(), geo.attributes.aHair.array.slice()],
-    to: [res.pos, res.col, res.hair],
+    from: SHELL_ATTRS.map(([name]) => geo.attributes[name].array.slice()),
+    to: SHELL_ATTRS.map(([, key]) => res[key]),
   });
 }
 function finishGeo(geo) {
-  geo.attributes.position.needsUpdate = true;
-  geo.attributes.color.needsUpdate = true;
-  geo.attributes.aHair.needsUpdate = true;
+  for (const [name] of SHELL_ATTRS) geo.attributes[name].needsUpdate = true;
   geo.computeVertexNormals();
   geo.computeBoundingSphere();
 }
@@ -1150,11 +1383,10 @@ function stepMorphs(dt) {
   for (const m of morphs) {
     m.t = Math.min(1, m.t + dt / 0.55);
     const e = m.t < 0.5 ? 4 * m.t * m.t * m.t : 1 - Math.pow(-2 * m.t + 2, 3) / 2;
-    const attrs = [m.geo.attributes.position, m.geo.attributes.color, m.geo.attributes.aHair];
-    for (let a = 0; a < 3; a++) {
-      const out = attrs[a].array, f = m.from[a], t = m.to[a];
+    SHELL_ATTRS.forEach(([name], a) => {
+      const out = m.geo.attributes[name].array, f = m.from[a], t = m.to[a];
       for (let i = 0; i < out.length; i++) out[i] = f[i] + (t[i] - f[i]) * e;
-    }
+    });
     finishGeo(m.geo);
   }
   for (const m of morphs) if (m.t >= 1) buildStrands(m.kind);
@@ -1201,6 +1433,12 @@ function renderUI() {
   }
   $('cuts').innerHTML = '';
   CUTS.forEach((C, idx) => {
+    if (C.group && (idx === 0 || CUTS[idx - 1].group !== C.group)) {
+      const h = document.createElement('div');
+      h.className = 'cut-group';
+      h.textContent = C.group;
+      $('cuts').appendChild(h);
+    }
     const b = document.createElement('button');
     b.className = 'cut' + (C.id === state.cut ? ' on' : '');
     b.innerHTML = `<span class="num">${ROMAN[idx]}</span><span class="nm">${C.name}</span><span class="sb">${C.it}</span>`;

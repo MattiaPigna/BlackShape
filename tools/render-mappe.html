@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Mappe geometria giro</title>
+<script type="importmap">{"imports":{"three":"../lib/three.module.js"}}</script>
+</head><body style="background:#111;color:#ccc;font:14px sans-serif">
+<div id="log">mappe…</div>
+<script type="module">
+// Per ogni angolo del giro (passo 5.625 gradi, 64 angoli) salva la "mappa delle posizioni" del busto calvo:
+// per ogni pixel il punto 3D della testa visto da quella camera. Con queste mappe tools/prepara-giro.py
+// calcola esattamente come si spostano i pixel tra due foto e crea le immagini intermedie.
+// Stesse camere di render-viste.html. Serve tools/server-salva.py (salva in modelli/viste/).
+import * as THREE from 'three';
+import { GLTFLoader } from './node_modules/three/examples/jsm/loaders/GLTFLoader.js';
+
+const N = 384, STEPS = 64;   // giro completo: un angolo ogni 5.625 gradi
+const r = new THREE.WebGLRenderer({ antialias: false });
+r.setSize(N, N); r.setPixelRatio(1);
+document.body.appendChild(r.domElement);
+const log = document.getElementById('log');
+
+const scene = new THREE.Scene();
+const gltf = await new GLTFLoader().loadAsync('../modelli/Meshy_AI_Stern_Bald_Head_Study_1105104142_generate.glb');
+const head = gltf.scene;
+const posMat = new THREE.ShaderMaterial({
+  vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+  fragmentShader: `varying vec3 vW; void main(){ gl_FragColor = vec4(vW, 1.0); }`,
+});
+head.traverse((o) => { if (o.isMesh) o.material = posMat; });
+scene.add(head);
+const box = new THREE.Box3().setFromObject(head);
+const c = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3());
+const R = Math.max(sz.x, sz.y, sz.z);
+const cam = new THREE.PerspectiveCamera(22, 1, R * 0.1, R * 20);
+const rt = new THREE.WebGLRenderTarget(N, N, { type: THREE.FloatType, format: THREE.RGBAFormat });
+const buf = new Float32Array(N * N * 4);
+const cams = [];
+for (let k = 0; k < STEPS; k++) {
+  const deg = k * 360 / STEPS;
+  const a = THREE.MathUtils.degToRad(deg);
+  const dir = new THREE.Vector3(Math.sin(a), 0.08, Math.cos(a)).normalize();
+  const dist = R * 0.5 / Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) * 1.15;
+  cam.position.copy(c).addScaledVector(dir, dist);
+  cam.lookAt(c);
+  cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+  r.setRenderTarget(rt);
+  r.setClearColor(0x000000, 0); r.clear();
+  r.render(scene, cam);
+  r.readRenderTargetPixels(rt, 0, 0, N, N, buf);
+  r.setRenderTarget(null);
+  const vp = new THREE.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+  cams.push({ deg, vp: vp.elements });
+  await fetch(`/salva?nome=pos_${String(k).padStart(2, '0')}.bin`, { method: 'POST', body: buf });
+  log.textContent = 'mappa ' + k + '/' + STEPS;
+}
+await fetch('/salva?nome=camere.json', { method: 'POST', body: JSON.stringify({ N, cams, center: c.toArray() }) });
+log.textContent += ' FATTO';
+document.title = 'FATTO';
+</script></body></html>

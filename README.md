@@ -9,8 +9,11 @@ Three.js e i font sono già inclusi nella cartella.
   Il Picciotto, Il Sicario (teste generate al computer).
 - **Capelli a fili**: ogni taglio è fatto da decine di migliaia di fili pettinati nella
   direzione giusta, con riflessi realistici; i tagli si trasformano con un'animazione.
-- **10 tagli**: Slick Back, Side Part, Pompadour, Taper Fade, French Crop, Buzz Cut,
-  Crew Cut, Undercut, Quiff, Flat Top.
+- **16 tagli** in due gruppi:
+  - *Classici*: Slick Back, Side Part, Pompadour, Quiff, Crew Cut, Flat Top, Buzz Cut, Undercut.
+  - *Moderni*: Low / Mid / High Skin Fade, Taper Fade, Drop Fade, Burst Fade, Textured Crop, Buzz Fade.
+- **Sfumature vere**: ogni taglio usa la funzione `fade()` in `app.js` con altezza della linea
+  (`low`, `mid`, `high`, `drop` o `burst` attorno all'orecchio) e numeri di rialzo (0 = a pelle).
 - **6 barbe**: Rasato, Barba di 3 giorni, Baffi, Pizzetto, Barba corta, Barba piena.
 - **6 colori**: Nero, Castano scuro, Castano, Brizzolato, Argento, Biondo cenere.
 - **Fedora** on/off, viste rapide **Fronte / Profilo / Nuca**, rotazione automatica

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Render viste modello</title>
+<style>body{margin:0;background:#111;color:#ccc;font:14px sans-serif}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"../lib/three.module.js"}}</script>
+</head><body>
+<div id="log">render…</div>
+<script type="module">
+// Renderizza il busto calvo (GLB) in 4 viste 1024x1024 e le salva in modelli/viste/ (serve tools/server-salva.py)
+import * as THREE from 'three';
+import { GLTFLoader } from './node_modules/three/examples/jsm/loaders/GLTFLoader.js';
+
+const S = 1024;
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+r.setSize(S, S); r.setPixelRatio(1);
+r.outputColorSpace = THREE.SRGBColorSpace;
+r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.0;
+document.body.appendChild(r.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2b2b2d);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x404040, 1.1));
+
+const gltf = await new GLTFLoader().loadAsync('../modelli/Meshy_AI_Stern_Bald_Head_Study_1105104142_generate.glb');
+const head = gltf.scene;
+head.traverse((o) => {
+  if (o.isMesh) {
+    o.geometry.computeVertexNormals();
+    o.material = new THREE.MeshStandardMaterial({ color: 0xa3a3a5, roughness: 0.75, metalness: 0 });
+  }
+});
+scene.add(head);
+const box = new THREE.Box3().setFromObject(head);
+const c = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3());
+const R = Math.max(sz.x, sz.y, sz.z);
+
+// luci da studio che seguono la camera (key, fill, rim)
+const key = new THREE.DirectionalLight(0xffffff, 2.2), fill = new THREE.DirectionalLight(0xffffff, 0.7), rim = new THREE.DirectionalLight(0xffffff, 1.2);
+scene.add(key, fill, rim, key.target, fill.target, rim.target);
+
+const cam = new THREE.PerspectiveCamera(22, 1, R * 0.1, R * 20);
+// ?giro -> 64 angoli del giro completo (passo 5.625) chiamati r00..r63, usati da tools/prepara-giro.py
+const VIEWS = new URLSearchParams(location.search).has('giro')
+  ? Array.from({ length: 64 }, (_, k) => ['r' + String(k).padStart(2, '0'), k * 5.625])
+  : [['a000', 0], ['a022', 22.5], ['a045', 45], ['a067', 67.5], ['a090', 90], ['a112', 112.5], ['a135', 135], ['a157', 157.5], ['a180', 180]];
+const log = document.getElementById('log');
+for (const [name, deg] of VIEWS) {
+  const a = THREE.MathUtils.degToRad(deg);
+  const dir = new THREE.Vector3(Math.sin(a), 0.08, Math.cos(a)).normalize(); // faccia verso +Z
+  const dist = R * 0.5 / Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) * 1.15;
+  cam.position.copy(c).addScaledVector(dir, dist);
+  cam.lookAt(c);
+  const side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+  key.position.copy(c).addScaledVector(dir, 3 * R).addScaledVector(side, -2 * R).add(new THREE.Vector3(0, 2 * R, 0));
+  fill.position.copy(c).addScaledVector(dir, 3 * R).addScaledVector(side, 2.5 * R);
+  rim.position.copy(c).addScaledVector(dir, -3 * R).add(new THREE.Vector3(0, 1.5 * R, 0));
+  [key, fill, rim].forEach((l) => l.target.position.copy(c));
+  r.render(scene, cam);
+  const blob = await new Promise((ok) => r.domElement.toBlob(ok, 'image/png'));
+  const res = await fetch('/salva?nome=' + name, { method: 'POST', body: blob });
+  log.textContent += ` ${name}:${res.status}`;
+}
+log.textContent += ' FATTO';
+document.title = 'FATTO';
+</script></body></html>

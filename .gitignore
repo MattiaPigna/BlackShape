@@ -1,1 +1,13 @@
 node_modules/
+
+# render intermedi e modelli rigenerabili (tools/render-*.html, tools/guscio-capelli.py)
+modelli/viste/
+modelli/guscio/*.glb
+modelli/guscio/pannelli-*.npz
+# materiale di lavoro: si tengono solo i fogli AI da cui si rigenera tutto
+da-sistemare/*
+!da-sistemare/bb-foglio6-*.png
+!da-sistemare/bb-pelle.png
+!da-sistemare/bb-busto-*.png
+Screenshot*.png
+__pycache__/

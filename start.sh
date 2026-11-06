@@ -5,7 +5,7 @@ PORT=8765
 
 # server locale (i moduli JavaScript non funzionano aprendo il file direttamente)
 if ! curl -s "http://127.0.0.1:$PORT/" >/dev/null 2>&1; then
-  (cd "$DIR" && python3 -m http.server $PORT --bind 127.0.0.1 >/dev/null 2>&1 &)
+  (cd "$DIR" && python3 tools/server.py $PORT >/dev/null 2>&1 &)
   sleep 2
 fi
 

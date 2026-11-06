@@ -105,6 +105,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* tagli */
 .cuts { display: flex; flex-direction: column; gap: .6vh; }
+.cut-group {
+  font-family: 'Cinzel', serif; font-size: .78em; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--muted); margin: 1vh 0 .2vh; padding-left: .2em;
+}
+.cut-group:first-child { margin-top: 0; }
 .cut {
   display: grid; grid-template-columns: 2.4em 1fr; align-items: center; text-align: left;
   border: 1px solid transparent; border-bottom-color: rgba(233,225,210,.08);
@@ -166,3 +171,64 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .cut-desc { display: none; }
   .brand .tag { display: none; }
 }
+
+/* ---------- GALLERIA (immagini per taglio) ---------- */
+body:not(.gallery) .g-only { display: none; }
+body.gallery .panel.left > :not(.g-only) { display: none; }
+body.gallery #scene { display: none; }
+#stage {
+  position: fixed; top: 12vh; bottom: 24vh;
+  left: calc(var(--panel-w) + 4vw); right: calc(var(--panel-w) + 4vw);
+  display: flex; align-items: center; justify-content: center; touch-action: pan-y;
+}
+#stage .frame {
+  position: relative; height: 100%; aspect-ratio: 1 / 1; max-width: 100%;
+  border: 1px solid rgba(196,22,28,.45); background: #0d0a0a;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.7) inset, 0 20px 60px rgba(0,0,0,.7), 0 0 40px rgba(196,22,28,.12);
+  overflow: hidden;
+}
+#stage .shot {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity .45s ease; pointer-events: none; -webkit-user-drag: none;
+}
+#stage .shot.on { opacity: 1; }
+#stage .empty {
+  position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 2em; color: var(--muted);
+}
+#stage .empty.on { display: flex; }
+#stage .em-t { font-family: 'Cinzel', serif; font-size: 1.6em; letter-spacing: .2em; color: var(--bone); margin-bottom: .6em; }
+#stage .em-s { font-style: italic; font-size: .95em; }
+#stage .nav {
+  position: absolute; top: 50%; transform: translateY(-50%); width: 2.4em; height: 3.4em;
+  border: 1px solid rgba(196,22,28,.5); background: rgba(10,8,8,.55); font-size: 1.6em; line-height: 1;
+}
+#stage .nav.prev { left: .4em; }
+#stage .nav.next { right: .4em; }
+#stage .dots { position: absolute; bottom: .9em; left: 0; right: 0; display: flex; gap: .55em; justify-content: center; }
+#stage .dot { width: .7em; height: .7em; padding: 0; border-radius: 50%; border: 1px solid var(--bone); background: transparent; opacity: .7; }
+#stage .dot.on { background: var(--red-hi); border-color: var(--red-hi); opacity: 1; }
+.thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: .8vh .6vw; }
+.thumb { padding: 0; border: 1px solid rgba(233,225,210,.15); background: #0d0a0a; display: flex; flex-direction: column; }
+.thumb img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+.thumb span { font-size: .8em; padding: .3em 0; color: var(--muted); }
+.thumb.on { border-color: var(--red); }
+.thumb.on span { color: var(--bone); }
+.g-note { color: var(--muted); font-style: italic; }
+.cut.missing { opacity: .45; }
+.views button:disabled { opacity: .35; cursor: default; }/* giro 360: livelli sovrapposti, dissolvenza gestita da JS (niente transizione CSS) */
+#stage .frame { cursor: grab; touch-action: none; user-select: none; }
+#stage .frame:active { cursor: grabbing; }
+#stage .layers { position: absolute; inset: 0; }
+#stage .layers .shot { transition: none; }
+#stage .dial {
+  position: absolute; bottom: .9em; left: 50%; width: 2.6em; height: 2.6em; margin-left: -1.3em;
+  border: 1px solid rgba(233,225,210,.35); border-radius: 50%; z-index: 5; pointer-events: none;
+}
+#stage .dial-dot {
+  position: absolute; left: 50%; top: 50%; width: .5em; height: .5em; margin: -.25em 0 0 -.25em;
+  border-radius: 50%; background: var(--red-hi);
+}
+#stage .nav { z-index: 5; }
+#stage .empty { z-index: 4; }
+#stage canvas.view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }

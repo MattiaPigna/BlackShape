@@ -1,3 +1,4 @@
 {
-  "don": { "note": "god+father_+15cm.stl", "center": [57.1, 40.0, 104.0], "scale": 0.027 }
+  "don": { "note": "god+father_+15cm.stl", "center": [57.1, 40.0, 104.0], "scale": 0.027 },
+  "capo": { "note": "Meshy_AI_Stern_Bald_Head_Study_1105104142_generate.glb (GLB, Y su, faccia +Z)", "center": [0, 0.15, -0.04], "scale": 1.2 }
 }

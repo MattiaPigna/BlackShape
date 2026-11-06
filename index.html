@@ -29,6 +29,10 @@
 
   <!-- PANNELLO SINISTRO -->
   <aside class="panel left">
+    <div class="g-only">
+      <h2><span>I</span> Le viste</h2>
+      <div id="thumbs" class="thumbs"></div>
+    </div>
     <h2><span>I</span> La Famiglia</h2>
     <div id="heads" class="heads"></div>
 
@@ -70,6 +74,10 @@
     Trascina per ruotare · Pizzica o rotella per lo zoom
   </div>
 
-  <script type="module" src="app.js"></script>
+  <!-- di default: galleria di immagini; con ?3d il vecchio showroom 3D -->
+  <script type="module">
+    if (new URLSearchParams(location.search).has('3d')) import('./app.js');
+    else import('./galleria.js');
+  </script>
 </body>
 </html>

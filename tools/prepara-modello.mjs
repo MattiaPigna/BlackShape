@@ -19,25 +19,83 @@ const TARGET_TRIS = +(triArg || 260000);
 const CFG = JSON.parse(fs.readFileSync(new URL('./modelli.json', import.meta.url)))[outName];
 if (!CFG) { console.log('Manca la configurazione in tools/modelli.json per', outName); process.exit(1); }
 
-// ---- lettura STL binario
+// ---- lettura: STL binario oppure GLB (glTF binario)
 const buf = fs.readFileSync(inFile);
-const nTri = buf.readUInt32LE(80);
-console.log('Triangoli originali:', nTri);
+const IS_GLB = buf.readUInt32LE(0) === 0x46546c67; // 'glTF'
+
+// legge tutti i triangoli come lista piatta di vertici [x,y,z, x,y,z, ...]
+function readTriangles() {
+  if (!IS_GLB) {
+    const nTri = buf.readUInt32LE(80);
+    const out = new Float32Array(nTri * 9);
+    for (let i = 0; i < nTri; i++) {
+      const o = 84 + i * 50 + 12;
+      for (let k = 0; k < 9; k++) out[i * 9 + k] = buf.readFloatLE(o + k * 4);
+    }
+    return out;
+  }
+  const jsonLen = buf.readUInt32LE(12);
+  const gl = JSON.parse(buf.subarray(20, 20 + jsonLen).toString('utf8'));
+  const binStart = 20 + jsonLen + 8;
+  const view = (accIdx) => {
+    const a = gl.accessors[accIdx], bv = gl.bufferViews[a.bufferView];
+    const off = binStart + (bv.byteOffset || 0) + (a.byteOffset || 0);
+    const comps = { SCALAR: 1, VEC3: 3 }[a.type];
+    const Arr = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array, 5121: Uint8Array }[a.componentType];
+    const stride = bv.byteStride ? bv.byteStride / Arr.BYTES_PER_ELEMENT : comps;
+    const src = new Arr(buf.buffer.slice(buf.byteOffset + off, buf.byteOffset + off + (a.count - 1) * stride * Arr.BYTES_PER_ELEMENT + comps * Arr.BYTES_PER_ELEMENT));
+    if (stride === comps) return src;
+    const dst = new Arr(a.count * comps);
+    for (let i = 0; i < a.count; i++) for (let c = 0; c < comps; c++) dst[i * comps + c] = src[i * stride + c];
+    return dst;
+  };
+  const tris = [];
+  // attraversa i nodi applicando le trasformazioni (solo matrice / TRS)
+  const walk = (ni, parent) => {
+    const n = gl.nodes[ni];
+    const m = new THREE.Matrix4();
+    if (n.matrix) m.fromArray(n.matrix);
+    else m.compose(new THREE.Vector3(...(n.translation || [0, 0, 0])), new THREE.Quaternion(...(n.rotation || [0, 0, 0, 1])), new THREE.Vector3(...(n.scale || [1, 1, 1])));
+    const world = parent.clone().multiply(m);
+    if (n.mesh !== undefined) {
+      for (const p of gl.meshes[n.mesh].primitives) {
+        if (p.mode !== undefined && p.mode !== 4) continue;     // solo triangoli
+        const P = view(p.attributes.POSITION);
+        const I = p.indices !== undefined ? view(p.indices) : null;
+        const cnt = I ? I.length : P.length / 3;
+        const out = new Float32Array(cnt * 3), v = new THREE.Vector3();
+        for (let k = 0; k < cnt; k++) {
+          const id = I ? I[k] : k;
+          v.set(P[id * 3], P[id * 3 + 1], P[id * 3 + 2]).applyMatrix4(world);
+          out[k * 3] = v.x; out[k * 3 + 1] = v.y; out[k * 3 + 2] = v.z;
+        }
+        tris.push(out);
+      }
+    }
+    for (const c of n.children || []) walk(c, world);
+  };
+  const sc = gl.scenes ? gl.scenes[gl.scene || 0].nodes : gl.nodes.map((_, i) => i);
+  for (const ni of sc) walk(ni, new THREE.Matrix4());
+  const total = tris.reduce((s, t) => s + t.length, 0);
+  const out = new Float32Array(total);
+  let o = 0; for (const t of tris) { out.set(t, o); o += t.length; }
+  return out;
+}
+const triPos = readTriangles();
+const nTri = triPos.length / 9;
+console.log(IS_GLB ? 'GLB' : 'STL', '- triangoli originali:', nTri);
 
 // ---- saldatura vertici
 const map = new Map();
 const pos = [];
 const idx = new Uint32Array(nTri * 3);
 const q = 1e4;
-for (let i = 0; i < nTri; i++) {
-  const o = 84 + i * 50 + 12;
-  for (let v = 0; v < 3; v++) {
-    const x = buf.readFloatLE(o + v * 12), y = buf.readFloatLE(o + v * 12 + 4), z = buf.readFloatLE(o + v * 12 + 8);
-    const key = Math.round(x * q) + ',' + Math.round(y * q) + ',' + Math.round(z * q);
-    let id = map.get(key);
-    if (id === undefined) { id = pos.length / 3; map.set(key, id); pos.push(x, y, z); }
-    idx[i * 3 + v] = id;
-  }
+for (let k = 0; k < nTri * 3; k++) {
+  const x = triPos[k * 3], y = triPos[k * 3 + 1], z = triPos[k * 3 + 2];
+  const key = Math.round(x * q) + ',' + Math.round(y * q) + ',' + Math.round(z * q);
+  let id = map.get(key);
+  if (id === undefined) { id = pos.length / 3; map.set(key, id); pos.push(x, y, z); }
+  idx[k] = id;
 }
 let positions = new Float32Array(pos);
 console.log('Vertici unici:', positions.length / 3);
@@ -58,8 +116,13 @@ for (let i = 0; i < simp.length; i++) {
     // trasformazione nel riferimento della testa
     const x = positions[v * 3], y = positions[v * 3 + 1], z = positions[v * 3 + 2];
     const [cx, cy, cz] = CFG.center, s = CFG.scale;
-    // STL: Z su, faccia verso -Y  ->  app: Y su, faccia verso +Z
-    outPos.push((x - cx) * s, (z - cz) * s, -(y - cy) * s);
+    if (IS_GLB) {
+      // glTF: gia' Y su, faccia verso +Z (come l'app)
+      outPos.push((x - cx) * s, (y - cy) * s, (z - cz) * s);
+    } else {
+      // STL: Z su, faccia verso -Y  ->  app: Y su, faccia verso +Z
+      outPos.push((x - cx) * s, (z - cz) * s, -(y - cy) * s);
+    }
   }
   outIdx[i] = remap[v];
 }

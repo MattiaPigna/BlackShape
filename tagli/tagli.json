@@ -1,0 +1,44 @@
+{
+  "nota": "Per ogni taglio metti le immagini in tagli/<id>/ con i nomi delle viste (fronte, tre-quarti, profilo, nuca). Formati: .webp, .jpg o .png. Le viste mancanti vengono saltate. Immagini attuali: tellbarber.com.",
+  "viste": [
+    { "id": "fronte", "nome": "Fronte" },
+    { "id": "tre-quarti", "nome": "Tre quarti" },
+    { "id": "profilo", "nome": "Profilo" },
+    { "id": "nuca", "nome": "Nuca" }
+  ],
+  "tagli": [
+    { "id": "slick-back", "gruppo": "Classici", "nome": "Slick Back", "it": "Pettinato all'indietro",
+      "desc": "Lunghezze sopra tirate indietro con brillantina, lati corti e puliti. Eleganza da boss." },
+    { "id": "pompadour", "gruppo": "Classici", "nome": "Pompadour", "it": "Ciuffo alto",
+      "desc": "Onda alta e voluminosa sulla fronte, lati corti. Puro stile anni '50." },
+    { "id": "ivy-league", "gruppo": "Classici", "nome": "Ivy League", "it": "Taglio da college",
+      "desc": "Corto e ordinato, sopra abbastanza lungo per una riga laterale. Sobrio e curato." },
+    { "id": "middle-part", "gruppo": "Classici", "nome": "Middle Part", "it": "Riga in mezzo",
+      "desc": "Lunghezze medie divise al centro che cadono ai lati della fronte." },
+    { "id": "buzz-cut", "gruppo": "Classici", "nome": "Buzz Cut", "it": "Rasato a macchinetta",
+      "desc": "Macchinetta uniforme su tutta la testa. Pulito, deciso, senza compromessi." },
+    { "id": "man-bun", "gruppo": "Classici", "nome": "Man Bun", "it": "Codino raccolto",
+      "desc": "Capelli lunghi raccolti in un nodo dietro la testa." },
+
+    { "id": "low-taper-fade", "gruppo": "Moderni", "nome": "Low Taper Fade", "it": "Sfumatura bassa ai bordi",
+      "desc": "Sfumate solo basette e nuca, appena sopra l'orecchio. Il resto resta pieno." },
+    { "id": "mid-taper-fade", "gruppo": "Moderni", "nome": "Mid Taper Fade", "it": "Sfumatura media",
+      "desc": "La sfumatura sale fino a meta' dei lati. Il taglio piu' richiesto: pulito ma non estremo." },
+    { "id": "textured-crop", "gruppo": "Moderni", "nome": "Textured Crop", "it": "Crop testurizzato",
+      "desc": "Sopra corto e mosso con texture, frangia in avanti, lati sfumati." },
+    { "id": "french-crop", "gruppo": "Moderni", "nome": "French Crop", "it": "Crop alla francese",
+      "desc": "Frangia corta e dritta sulla fronte, sopra compatto, lati corti." },
+    { "id": "crops-fade", "gruppo": "Moderni", "nome": "Crop Skin Fade", "it": "Crop con sfumatura a pelle",
+      "desc": "Crop testurizzato sopra, lati sfumati fino alla pelle. Contrasto netto." },
+    { "id": "curly-taper", "gruppo": "Moderni", "nome": "Curly Taper", "it": "Ricci con sfumatura",
+      "desc": "Ricci lasciati liberi sopra, bordi sfumati per un look pulito." },
+    { "id": "two-block", "gruppo": "Moderni", "nome": "Two Block", "it": "Stile coreano",
+      "desc": "Lati e nuca corti, sopra lungo che ricade sopra la parte rasata." },
+    { "id": "edgar-cut", "gruppo": "Moderni", "nome": "Edgar Cut", "it": "Frangia dritta e skin fade",
+      "desc": "Frangia orizzontale netta sulla fronte, sfumatura alta a pelle." },
+    { "id": "modern-mullet", "gruppo": "Moderni", "nome": "Modern Mullet", "it": "Mullet moderno",
+      "desc": "Corto davanti e ai lati, lungo dietro sulla nuca. Ribelle ma curato." },
+    { "id": "mohawk-fade", "gruppo": "Moderni", "nome": "Mohawk Fade", "it": "Cresta con sfumatura",
+      "desc": "Cresta centrale testurizzata, lati sfumati a pelle." }
+  ]
+}
