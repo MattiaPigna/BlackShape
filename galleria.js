@@ -11,7 +11,9 @@ const $ = (id) => document.getElementById(id);
 // angolo di ogni vista (0 = fronte, 90 = profilo sinistro, 180 = nuca); v6-v9 sono le viste specchiate
 const ANGLES = [0, 45, 90, 125, 155, 180, 205, 235, 270, 315];
 const VISTE_VER = 'ai7';   // cambia quando si rigenerano le viste (il browser ricarica le immagini)
-const FADE_MS = 160;       // breve dissolvenza tra una vista e l'altra
+// passaggio tra due viste vicine: per la parte centrale del tratto le due immagini si dissolvono l'una
+// nell'altra seguendo l'angolo; nel resto si vede una sola vista nitida. 0 = scatto netto, 1 = sempre sfumato
+const BLEND = Math.min(1, Math.max(0, Q.has('blend') ? +Q.get('blend') : 0.35));
 const frameSrc = (c, i) => `tagli/${c.id}/viste/v${i}.webp?v=${VISTE_VER}`;
 const thumbSrc = (c) => `tagli/${c.id}/viste/t.webp?v=${VISTE_VER}`;
 const angDist = (a, b) => Math.abs(((a - b) % 360 + 540) % 360 - 180);
@@ -246,14 +248,14 @@ function fitCanvas() {
   const px = Math.min(1024, Math.round(r.width * (window.devicePixelRatio || 1)));
   if (cv.width !== px) { cv.width = px; cv.height = px; }
 }
-window.addEventListener('resize', () => { fitCanvas(); drawnImg = null; draw(); });
+window.addEventListener('resize', () => { fitCanvas(); drawnKey = ''; draw(); });
 
 let mountToken = 0;
 async function mountCut() {
   const c = CUTS[state.cut];
   const tok = ++mountToken;
   layers = [];
-  fitCanvas(); drawnImg = null;
+  fitCanvas(); drawnKey = '';
   stage.querySelector('.empty').classList.toggle('on', !c.has);
   stage.querySelectorAll('.nav').forEach((b) => { b.style.visibility = c.has ? 'visible' : 'hidden'; });
   $('pickBtn').disabled = !c.has;
@@ -270,32 +272,30 @@ async function mountCut() {
   }
   if (tok !== mountToken) return;
   layers = c.frames;
-  fade = null;
+  drawnKey = '';
   draw();
 }
 
-// mostra la vista piu' vicina all'angolo corrente, con una breve dissolvenza dalla precedente
-let shown = -1, drawnImg = null, fade = null;
-function paint() {
-  const w = cv.width;
-  if (fade) {
-    const t = Math.min(1, (performance.now() - fade.t0) / FADE_MS);
-    ctx.globalAlpha = 1; ctx.drawImage(fade.from, 0, 0, w, w);
-    ctx.globalAlpha = t; ctx.drawImage(drawnImg, 0, 0, w, w);
-    ctx.globalAlpha = 1;
-    if (t >= 1) fade = null;
-  } else ctx.drawImage(drawnImg, 0, 0, w, w);
-}
+// disegna la testa all'angolo corrente: la vista prima e quella dopo, sfumate solo vicino a meta' strada
+let drawnKey = '';
 function draw() {
   if (!layers.length) return;
   const a = ((state.ang % 360) + 360) % 360;
-  const i = viewAt(a);
-  if (i !== shown || layers[i] !== drawnImg) {
-    // dissolvenza solo per i salti comandati (frecce, Fronte/Profilo/Nuca): trascinando o in vetrina cambio netto,
-    // altrimenti due viste sovrapposte sembrano sfocate
-    fade = anim && drawnImg && layers.includes(drawnImg) ? { from: drawnImg, t0: performance.now() } : null;
-    shown = i; drawnImg = layers[i];
-    paint();
+  let i0 = ANGLES.length - 1;
+  for (let k = 0; k < ANGLES.length; k++) if (ANGLES[k] <= a) i0 = k;
+  const i1 = (i0 + 1) % ANGLES.length;
+  const a0 = ANGLES[i0], a1 = i1 ? ANGLES[i1] : 360;
+  const f = ((a - a0 + 360) % 360) / (a1 - a0);          // 0 = vista i0, 1 = vista i1
+  let w = BLEND > 0 ? Math.min(1, Math.max(0, (f - 0.5) / BLEND + 0.5)) : (f >= 0.5 ? 1 : 0);
+  w = w * w * (3 - 2 * w);                                 // entra ed esce morbida
+  w = Math.round(w * 32) / 32;                             // evita di ridisegnare per differenze invisibili
+  const key = i0 + ':' + i1 + ':' + w + ':' + cv.width;
+  if (key !== drawnKey) {
+    drawnKey = key;
+    const W = cv.width;
+    ctx.globalAlpha = 1;
+    ctx.drawImage(layers[w >= 1 ? i1 : i0], 0, 0, W, W);
+    if (w > 0 && w < 1) { ctx.globalAlpha = w; ctx.drawImage(layers[i1], 0, 0, W, W); ctx.globalAlpha = 1; }
   }
   const near = [0, 90, 180, 270].reduce((m, x) => (angDist(a, x) < angDist(a, m) ? x : m), 0);
   document.querySelectorAll('[data-view]').forEach((b) => {
@@ -404,7 +404,6 @@ function touch() { lastInput = performance.now(); }
 let last = performance.now();
 function tick(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  if (fade) paint();
   if (pickOpen && now - lastInput > PICK_IDLE_MS) closePick();
   if (quizOpen && now - lastInput > PICK_IDLE_MS) closeQuiz();
   const modal = pickOpen || quizOpen;
