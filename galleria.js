@@ -12,10 +12,7 @@ const $ = (id) => document.getElementById(id);
 const ANGLES = [0, 45, 90, 125, 155, 180, 205, 235, 270, 315];
 const VISTE_VER = 'ai7';   // cambia quando si rigenerano le viste (il browser ricarica le immagini)
 const FADE_MS = 160;       // breve dissolvenza tra una vista e l'altra
-// colore dei capelli: '' = quello del foglio AI, gli altri sono in tagli/<id>/viste/<colore>/ (tools/prepara-viste.py)
-const COLORI = [['', 'Naturale', '#3b2a1e'], ['castano', 'Castano', '#8b6a4c'], ['biondo', 'Biondo', '#d8b878'], ['grigio', 'Grigio', '#bdbdc1']];
-const colPath = (col) => (col ? col + '/' : '');
-const frameSrc = (c, i, col = c.noColor ? '' : state.color) => `tagli/${c.id}/viste/${colPath(col)}v${i}.webp?v=${VISTE_VER}`;
+const frameSrc = (c, i) => `tagli/${c.id}/viste/v${i}.webp?v=${VISTE_VER}`;
 const thumbSrc = (c) => `tagli/${c.id}/viste/t.webp?v=${VISTE_VER}`;
 const angDist = (a, b) => Math.abs(((a - b) % 360 + 540) % 360 - 180);
 const viewAt = (ang) => {   // vista piu' vicina all'angolo
@@ -43,7 +40,7 @@ const loadImg = (src) => new Promise((ok) => {
 
 // ---------- stato ----------
 let CUTS = [], GROUPS = [], VISI = {};
-const state = { cut: 0, ang: 0, tab: null, face: null, color: '' };
+const state = { cut: 0, ang: 0, tab: null, face: null };
 let autoSpin = !Q.has('nospin');
 // all'avvio la vetrina parte subito, il logo di standby arriva dopo STANDBY_MS
 let lastInput = performance.now() - IDLE_MS, vel = 0, spun = 0, pickOpen = false, quizOpen = false;
@@ -80,13 +77,6 @@ const tagsEl = document.createElement('div');
 tagsEl.className = 'cut-tags';
 info.appendChild(tagsEl);
 info.appendChild(document.querySelector('.views'));
-// scelta del colore dei capelli
-const colorsEl = document.createElement('div');
-colorsEl.className = 'colors';
-colorsEl.innerHTML = `<span class="cl-k">Colore</span>` + COLORI.map(([k, nome, hex]) =>
-  `<button data-col="${k}" aria-label="${nome}" title="${nome}"><i style="background:${hex}"></i></button>`).join('') +
-  `<span class="cl-n"></span>`;
-info.appendChild(colorsEl);
 side.appendChild($('cuts'));
 
 // ---------- scheda "Scelgo questo" da mostrare al barbiere ----------
@@ -230,7 +220,6 @@ let standbyOn = false;
 function setStandby(on) {
   if (on === standbyOn) return;
   standbyOn = on; standby.classList.toggle('on', on);
-  if (on) setColor('');   // il prossimo cliente riparte dal colore naturale
 }
 standby.addEventListener('pointerdown', touch);
 standby.addEventListener('click', (e) => { e.stopPropagation(); touch(); setStandby(false); });
@@ -242,9 +231,7 @@ function openPick() {
   pick.querySelector('.pk-name').textContent = C.nome;
   pick.querySelector('.pk-it').textContent = C.it;
   pick.querySelector('.pk-desc').textContent = C.desc;
-  const col = C.noColor ? '' : state.color;
-  pick.querySelector('.pk-tags').innerHTML = tagsHtml(C, true) +
-    (col ? `<span><b>●</b>Colore: ${esc(COLORI.find(([k]) => k === col)[1].toLowerCase())}</span>` : '');
+  pick.querySelector('.pk-tags').innerHTML = tagsHtml(C, true);
   pick.querySelector('.pk-shots').innerHTML = [['Fronte', 0], ['Profilo', 90], ['Nuca', 180]]
     .map(([n, a]) => `<figure><img src="${frameSrc(C, viewAt(a))}" alt=""><figcaption>${n}</figcaption></figure>`).join('');
   pickOpen = true; pick.classList.add('on'); touch();
@@ -271,22 +258,15 @@ async function mountCut() {
   stage.querySelectorAll('.nav').forEach((b) => { b.style.visibility = c.has ? 'visible' : 'hidden'; });
   $('pickBtn').disabled = !c.has;
   if (!c.has) { ctx.clearRect(0, 0, cv.width, cv.height); return; }
-  const col = c.noColor ? '' : state.color;
-  if (c.frames && c.framesCol !== col) c.frames = null;
   if (!c.frames) {
     // tiene in memoria solo il taglio corrente (il Raspberry ha poca RAM): libera gli altri prima di caricare
     CUTS.forEach((o) => { if (o !== c) o.frames = null; });
     $('loading').textContent = 'Carico il taglio…'; $('loading').classList.add('on');
     const fr = await Promise.all(ANGLES.map((_, i) => loadImg(frameSrc(c, i))));
     if (tok === mountToken) $('loading').classList.remove('on');
-    if (!fr.every(Boolean)) {
-      if (col) c.noColor = true;   // questo taglio non ha le viste colorate: si resta sul colore naturale
-      else c.has = false;
-      if (tok === mountToken) { mountCut(); updateColors(); }
-      return;
-    }
+    if (!fr.every(Boolean)) { c.has = false; if (tok === mountToken) mountCut(); return; }
     if (tok !== mountToken) return;   // nel frattempo e' stato scelto un altro taglio: non tenerlo in memoria
-    c.frames = fr; c.framesCol = col;
+    c.frames = fr;
   }
   if (tok !== mountToken) return;
   layers = c.frames;
@@ -392,24 +372,11 @@ function updateInfo() {
   tagsEl.innerHTML = tagsHtml(C, false);
 }
 
-function updateColors() {
-  const C = CUTS[state.cut];
-  const col = C && C.noColor ? '' : state.color;
-  colorsEl.querySelectorAll('[data-col]').forEach((b) => b.classList.toggle('on', b.dataset.col === col));
-  colorsEl.querySelector('.cl-n').textContent = COLORI.find(([k]) => k === col)[1];
-}
-function setColor(col) {
-  if (state.color === col) return;
-  state.color = col;
-  updateColors(); mountCut();
-}
-colorsEl.querySelectorAll('[data-col]').forEach((b) => { b.onclick = () => { touch(); setColor(b.dataset.col); }; });
-
 function selectCut(idx, keepTab) {
   if (state.cut === idx) return;
   state.cut = idx; state.ang = 0; vel = 0; spun = 0; anim = null;
   if (!keepTab) state.tab = CUTS[idx].gruppo || '';
-  mountCut(); renderList(); updateInfo(); updateColors();
+  mountCut(); renderList(); updateInfo();
 }
 
 // ---------- animazioni ----------
@@ -525,7 +492,7 @@ $('spinBtn').classList.toggle('on', autoSpin);
   if (!Object.keys(VISI).length) QUIZ.shift();   // senza dati sui visi il quiz parte dalla lunghezza
   // controlla quali tagli hanno le viste (le altre si caricano quando si sceglie il taglio)
   await Promise.all(CUTS.map(async (c) => {
-    c.has = !!(await loadImg(frameSrc(c, 0, '')));
+    c.has = !!(await loadImg(frameSrc(c, 0)));
     c.frames = null;
   }));
   $('loading').classList.remove('on');
@@ -539,8 +506,7 @@ $('spinBtn').classList.toggle('on', autoSpin);
   if (Q.has('nohint')) hint.classList.add('gone');
   setTimeout(() => hint.classList.add('gone'), 9000);
   stage.addEventListener('pointerdown', () => hint.classList.add('gone'));
-  if (COLORI.some(([k]) => k && k === Q.get('colore'))) state.color = Q.get('colore');
-  mountCut(); renderList(); updateInfo(); updateColors();
+  mountCut(); renderList(); updateInfo();
   if (Q.has('pick')) openPick();
   if (Q.has('quiz')) openQuiz();
   requestAnimationFrame(tick);
