@@ -40,7 +40,7 @@ const loadImg = (src) => new Promise((ok) => {
 
 // ---------- stato ----------
 let CUTS = [], GROUPS = [], VISI = {};
-const state = { cut: 0, ang: 0, tab: null };
+const state = { cut: 0, ang: 0, tab: null, face: null };
 let autoSpin = !Q.has('nospin');
 // all'avvio la vetrina parte subito, il logo di standby arriva dopo STANDBY_MS
 let lastInput = performance.now() - IDLE_MS, vel = 0, spun = 0, pickOpen = false, quizOpen = false;
@@ -305,34 +305,60 @@ function draw() {
   });
 }
 
-// schede Classici / Moderni + miniature dei tagli del gruppo scelto
+// schede Classici / Moderni / Viso + miniature dei tagli
+const FACE_TAB = '__viso';
+function cutButton(C, idx) {
+  const b = document.createElement('button');
+  b.className = 'cut' + (idx === state.cut ? ' on' : '') + (C.has ? '' : ' missing');
+  b.innerHTML = (C.has ? `<img src="${thumbSrc(C)}" alt="" loading="lazy">` : '<span class="ph">In arrivo</span>') +
+    `<span class="nm">${esc(C.nome)}</span>`;
+  // dalla scheda Viso si resta li': l'elenco dei tagli adatti non sparisce
+  b.onclick = () => { touch(); selectCut(idx, state.tab === FACE_TAB); spinShow(); };
+  return b;
+}
 function renderList() {
   const tabs = $('tabs');
   tabs.innerHTML = '';
-  GROUPS.forEach((g) => {
+  const tabList = GROUPS.map((g) => [g, g]);
+  if (Object.keys(VISI).length) tabList.push(['◎ Viso', FACE_TAB]);
+  tabList.forEach(([label, key]) => {
     const b = document.createElement('button');
-    b.textContent = g;
-    b.className = g === state.tab ? 'on' : '';
-    b.onclick = () => { touch(); state.tab = g; renderList(); $('cuts').scrollTop = 0; };
+    b.textContent = label;
+    b.className = (key === FACE_TAB ? 'tab-face ' : '') + (key === state.tab ? 'on' : '');
+    b.onclick = () => { touch(); state.tab = key; renderList(); $('cuts').scrollTop = 0; };
     tabs.appendChild(b);
   });
   const qb = document.createElement('button');
   qb.className = 'tab-quiz'; qb.textContent = '✦ Trova';
   qb.onclick = openQuiz;
   tabs.appendChild(qb);
-  $('cuts').innerHTML = '';
-  CUTS.forEach((C, idx) => {
-    if ((C.gruppo || '') !== state.tab) return;
-    const b = document.createElement('button');
-    b.className = 'cut' + (idx === state.cut ? ' on' : '') + (C.has ? '' : ' missing');
-    b.innerHTML = (C.has ? `<img src="${thumbSrc(C)}" alt="" loading="lazy">` : '<span class="ph">In arrivo</span>') +
-      `<span class="nm">${C.nome}</span>`;
-    b.onclick = () => { touch(); selectCut(idx); spinShow(); };
-    $('cuts').appendChild(b);
-  });
+
+  const box = $('cuts');
+  box.innerHTML = '';
+  if (state.tab === FACE_TAB) {
+    // scheda Viso: si tocca la forma del viso e compaiono tutti i tagli consigliati
+    const fp = document.createElement('div');
+    fp.className = 'face-pick';
+    Object.entries(VISI).forEach(([k, V]) => {
+      const b = document.createElement('button');
+      b.className = k === state.face ? 'on' : '';
+      b.innerHTML = `${faceSvg(k)}<span>${esc(V.nome)}</span>`;
+      b.onclick = () => { touch(); state.face = k; renderList(); };
+      fp.appendChild(b);
+    });
+    box.appendChild(fp);
+    const note = document.createElement('p');
+    note.className = 'face-note';
+    const V = VISI[state.face];
+    note.textContent = V ? `${V.come} Tagli consigliati:` : 'Tocca la forma del tuo viso per vedere i tagli che ti stanno meglio.';
+    box.appendChild(note);
+    if (V) CUTS.forEach((C, idx) => { if (V.si.includes(C.id)) box.appendChild(cutButton(C, idx)); });
+    return;
+  }
+  CUTS.forEach((C, idx) => { if ((C.gruppo || '') === state.tab) box.appendChild(cutButton(C, idx)); });
   // porta in vista il taglio scelto (dopo che caratteri e miniature hanno preso la loro misura)
   setTimeout(() => {
-    const on = $('cuts').querySelector('.cut.on'), box = $('cuts');
+    const on = box.querySelector('.cut.on');
     if (on) box.scrollTo({ top: on.offsetTop - box.offsetTop - (box.clientHeight - on.offsetHeight) / 2, behavior: 'smooth' });
   }, 250);
 }
@@ -346,10 +372,10 @@ function updateInfo() {
   tagsEl.innerHTML = tagsHtml(C, false);
 }
 
-function selectCut(idx) {
+function selectCut(idx, keepTab) {
   if (state.cut === idx) return;
   state.cut = idx; state.ang = 0; vel = 0; spun = 0; anim = null;
-  state.tab = CUTS[idx].gruppo || '';
+  if (!keepTab) state.tab = CUTS[idx].gruppo || '';
   mountCut(); renderList(); updateInfo();
 }
 

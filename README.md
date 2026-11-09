@@ -9,6 +9,7 @@ Funziona **offline** (font e immagini sono nella cartella).
 - **20 tagli** divisi in *Classici* e *Moderni*, con miniature, descrizione e schede
   (tempo in poltrona, ogni quanto ritoccarlo, prodotto). Testi e schede in `tagli/tagli.json`.
 - **Scelgo questo**: scheda a tutto schermo con fronte, profilo e nuca da mostrare al barbiere.
+- **Viso**: scheda accanto a Classici e Moderni, tocchi la forma del tuo viso e vedi tutti i tagli adatti.
 - **Trova il tuo taglio**: forma del viso (6 forme, si puo' saltare) + 3 domande (lunghezza, lati,
   tempo per la piega) e l'app propone 3 tagli. Gli abbinamenti viso/taglio sono in `tagli/tagli.json`
   (`visi`: per ogni forma i tagli consigliati `si` e quelli da evitare `no`).

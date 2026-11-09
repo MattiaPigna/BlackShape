@@ -354,3 +354,17 @@ body.gallery {
   .qz-faces > button { padding: .4em .3em .5em; }
   .qz-faces .fh { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 }
+
+/* ---------- SCHEDA VISO: forme del viso + tagli consigliati ---------- */
+.tabs button { letter-spacing: .1em; }
+.tabs .tab-face { color: var(--bone); }
+#side .cuts .face-pick { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: .4em; }
+.face-pick button {
+  display: flex; flex-direction: column; align-items: center; gap: .2em; padding: .45em .2em .4em;
+  border: 1px solid rgba(233,225,210,.14); background: #151313;
+  font-family: 'Cinzel', serif; font-weight: 700; font-size: .72em; letter-spacing: .04em;
+}
+.face-pick svg { height: clamp(22px, 5.5vh, 54px); width: auto; fill: rgba(233,225,210,.06); stroke: var(--red-hi); stroke-width: 3; }
+.face-pick button.on { border-color: var(--red-hi); background: rgba(196,22,28,.3); color: #fff; }
+.face-pick button.on svg { fill: rgba(255,59,59,.25); }
+#side .cuts .face-note { grid-column: 1 / -1; margin: .2em 0 0; color: var(--muted); font-style: italic; font-size: .85em; text-align: center; }
