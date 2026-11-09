@@ -10,7 +10,7 @@ const Q = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
 // angolo di ogni vista (0 = fronte, 90 = profilo sinistro, 180 = nuca); v6-v9 sono le viste specchiate
 const ANGLES = [0, 45, 90, 125, 155, 180, 205, 235, 270, 315];
-const VISTE_VER = 'ai6';   // cambia quando si rigenerano le viste (il browser ricarica le immagini)
+const VISTE_VER = 'ai7';   // cambia quando si rigenerano le viste (il browser ricarica le immagini)
 const FADE_MS = 160;       // breve dissolvenza tra una vista e l'altra
 const frameSrc = (c, i) => `tagli/${c.id}/viste/v${i}.webp?v=${VISTE_VER}`;
 const thumbSrc = (c) => `tagli/${c.id}/viste/t.webp?v=${VISTE_VER}`;
