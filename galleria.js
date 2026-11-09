@@ -43,7 +43,7 @@ let CUTS = [], GROUPS = [];
 const state = { cut: 0, ang: 0, tab: null };
 let autoSpin = !Q.has('nospin');
 // all'avvio la vetrina parte subito, il logo di standby arriva dopo STANDBY_MS
-let lastInput = performance.now() - IDLE_MS, vel = 0, spun = 0, pickOpen = false;
+let lastInput = performance.now() - IDLE_MS, vel = 0, spun = 0, pickOpen = false, quizOpen = false;
 
 // ---------- palco (testa grande) ----------
 const stage = document.createElement('div');
@@ -73,6 +73,9 @@ document.body.appendChild(side);
 side.prepend(document.querySelector('.brand'));
 const info = side.querySelector('.s-info');
 ['cutIt', 'cutName', 'cutDesc'].forEach((id) => info.appendChild($(id)));
+const tagsEl = document.createElement('div');
+tagsEl.className = 'cut-tags';
+info.appendChild(tagsEl);
 info.appendChild(document.querySelector('.views'));
 side.appendChild($('cuts'));
 
@@ -85,11 +88,95 @@ pick.innerHTML = `
     <div class="pk-name"></div>
     <div class="pk-it"></div>
     <div class="pk-shots"></div>
+    <div class="pk-tags"></div>
     <div class="pk-desc"></div>
     <div class="pk-note">Mostra questa schermata al barbiere</div>
     <button class="pk-close">Cambia taglio</button>
   </div>`;
 document.body.appendChild(pick);
+
+// ---------- schede del taglio: ritocco, prodotto, durata (campo "info" in tagli.json) ----------
+const esc = (t) => String(t).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+function tagsHtml(C, full) {
+  const I = C.info;
+  if (!I) return '';
+  const t = full
+    ? [['✂', `In poltrona ${I.durata}`], ['⟳', `Ritocco ogni ${I.ritocco}`], ['◆', `Prodotto: ${I.prodotto}`],
+       ['☀', I.piega ? `Piega: ${I.piega} min al mattino` : 'Pronto senza piega']]
+    : [['✂', I.durata], ['⟳', `ogni ${I.ritocco.replace('settimane', 'sett.')}`], ['◆', I.prodotto]];
+  return t.map(([ic, tx]) => `<span><b>${ic}</b>${esc(tx)}</span>`).join('');
+}
+
+// ---------- "Trova il tuo taglio": 3 domande, poi i 3 tagli piu' adatti ----------
+const QUIZ = [
+  { q: 'Come li vuoi?', k: 'lunghezza', opts: [['Corti', 'corto'], ['Medi', 'medio'], ['Lunghi', 'lungo']] },
+  { q: 'I lati?', k: 'sfumatura', opts: [['Sfumati', 'si'], ['Naturali', 'no'], ['Indifferente', 'x']] },
+  { q: 'Quanto tempo per sistemarli al mattino?', k: 'piega', opts: [['Zero, pronti subito', '0'], ['Pochi minuti', '5'], ['Mi piace curarli', '10']] },
+];
+function quizScore(C, ans) {
+  const I = C.info;
+  if (!I) return -1;
+  const L = ['corto', 'medio', 'lungo'];
+  const dl = Math.abs(L.indexOf(I.lunghezza) - L.indexOf(ans.lunghezza));
+  let sc = dl === 0 ? 3 : dl === 1 ? 1 : 0;
+  if (ans.sfumatura === 'si' && I.sfumatura) sc += 2;
+  if (ans.sfumatura === 'no' && !I.sfumatura) sc += 2;
+  const p = I.piega;
+  if (ans.piega === '0') sc += p === 0 ? 3 : p <= 2 ? 2 : p <= 3 ? 1 : 0;
+  if (ans.piega === '5') sc += p >= 3 && p <= 5 ? 2 : p <= 2 ? 1 : 0;
+  if (ans.piega === '10') sc += p >= 10 ? 2 : p >= 5 ? 1 : 0;
+  return sc;
+}
+const quiz = document.createElement('div');
+quiz.id = 'quiz';
+quiz.innerHTML = `
+  <div class="qz-card">
+    <div class="qz-k">✦ Trova il tuo taglio</div>
+    <div class="qz-step"></div>
+    <div class="qz-q"></div>
+    <div class="qz-opts"></div>
+    <div class="qz-bar"><button class="qz-back">‹ Indietro</button><button class="qz-close">Chiudi</button></div>
+  </div>`;
+document.body.appendChild(quiz);
+let qStep = 0, qAns = {};
+function renderQuiz() {
+  const opts = quiz.querySelector('.qz-opts');
+  quiz.querySelector('.qz-back').style.visibility = qStep > 0 ? 'visible' : 'hidden';
+  if (qStep < QUIZ.length) {
+    const Qz = QUIZ[qStep];
+    quiz.querySelector('.qz-step').textContent = `Domanda ${qStep + 1} di ${QUIZ.length}`;
+    quiz.querySelector('.qz-q').textContent = Qz.q;
+    opts.className = 'qz-opts';
+    opts.innerHTML = '';
+    Qz.opts.forEach(([label, val]) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.onclick = () => { touch(); qAns[Qz.k] = val; qStep++; renderQuiz(); };
+      opts.appendChild(b);
+    });
+    return;
+  }
+  // risultati: i 3 tagli col punteggio piu' alto (a parita' vale l'ordine dell'elenco)
+  const best = CUTS.map((C, idx) => ({ C, idx, sc: C.has ? quizScore(C, qAns) : -1 }))
+    .filter((r) => r.sc >= 0).sort((a, b) => b.sc - a.sc || a.idx - b.idx).slice(0, 3);
+  quiz.querySelector('.qz-step').textContent = 'Fatti per te';
+  quiz.querySelector('.qz-q').textContent = 'Tocca un taglio per vederlo';
+  opts.className = 'qz-opts qz-res';
+  opts.innerHTML = '';
+  best.forEach(({ C, idx }) => {
+    const b = document.createElement('button');
+    b.className = 'qz-cut';
+    b.innerHTML = `<img src="${thumbSrc(C)}" alt=""><span class="nm">${esc(C.nome)}</span><span class="it">${esc(C.it)}</span>` +
+      `<span class="cut-tags">${tagsHtml(C, false)}</span>`;
+    b.onclick = () => { closeQuiz(); selectCut(idx); spinShow(); };
+    opts.appendChild(b);
+  });
+}
+function openQuiz() { qStep = 0; qAns = {}; renderQuiz(); quizOpen = true; quiz.classList.add('on'); touch(); }
+function closeQuiz() { quizOpen = false; quiz.classList.remove('on'); touch(); }
+quiz.querySelector('.qz-close').onclick = closeQuiz;
+quiz.querySelector('.qz-back').onclick = () => { touch(); if (qStep > 0) { qStep--; renderQuiz(); } };
+quiz.addEventListener('pointerdown', touch);
 
 // ---------- standby: logo BLACKBLADE a tutto schermo quando nessuno usa l'app ----------
 const standby = document.createElement('div');
@@ -100,6 +187,7 @@ standby.innerHTML = `
     <h1>BLACKBLADE</h1>
     <p class="sb-tag">Barberia · <em>Un taglio che non potrai rifiutare</em></p>
     <p class="sb-touch">Tocca lo schermo per scegliere il tuo taglio</p>
+    <button class="sb-quiz">✦ Non sai cosa scegliere? Trova il tuo taglio</button>
   </div>`;
 document.body.appendChild(standby);
 let standbyOn = false;
@@ -109,6 +197,7 @@ function setStandby(on) {
 }
 standby.addEventListener('pointerdown', touch);
 standby.addEventListener('click', (e) => { e.stopPropagation(); touch(); setStandby(false); });
+standby.querySelector('.sb-quiz').addEventListener('click', (e) => { e.stopPropagation(); setStandby(false); openQuiz(); });
 
 function openPick() {
   const C = CUTS[state.cut];
@@ -116,6 +205,7 @@ function openPick() {
   pick.querySelector('.pk-name').textContent = C.nome;
   pick.querySelector('.pk-it').textContent = C.it;
   pick.querySelector('.pk-desc').textContent = C.desc;
+  pick.querySelector('.pk-tags').innerHTML = tagsHtml(C, true);
   pick.querySelector('.pk-shots').innerHTML = [['Fronte', 0], ['Profilo', 90], ['Nuca', 180]]
     .map(([n, a]) => `<figure><img src="${frameSrc(C, viewAt(a))}" alt=""><figcaption>${n}</figcaption></figure>`).join('');
   pickOpen = true; pick.classList.add('on'); touch();
@@ -200,6 +290,10 @@ function renderList() {
     b.onclick = () => { touch(); state.tab = g; renderList(); $('cuts').scrollTop = 0; };
     tabs.appendChild(b);
   });
+  const qb = document.createElement('button');
+  qb.className = 'tab-quiz'; qb.textContent = '✦ Trova';
+  qb.onclick = openQuiz;
+  tabs.appendChild(qb);
   $('cuts').innerHTML = '';
   CUTS.forEach((C, idx) => {
     if ((C.gruppo || '') !== state.tab) return;
@@ -223,6 +317,7 @@ function updateInfo() {
     const el = $(id); el.textContent = txt;
     el.classList.remove('fade-swap'); void el.offsetWidth; el.classList.add('fade-swap');
   }
+  tagsEl.innerHTML = tagsHtml(C, false);
 }
 
 function selectCut(idx) {
@@ -259,8 +354,10 @@ function tick(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (fade) paint();
   if (pickOpen && now - lastInput > PICK_IDLE_MS) closePick();
-  setStandby(!pickOpen && now - lastInput > STANDBY_MS);
-  const idle = autoSpin && !pickOpen && !dragging && now - lastInput > IDLE_MS && layers.length;
+  if (quizOpen && now - lastInput > PICK_IDLE_MS) closeQuiz();
+  const modal = pickOpen || quizOpen;
+  setStandby(!modal && now - lastInput > STANDBY_MS);
+  const idle = autoSpin && !modal && !dragging && now - lastInput > IDLE_MS && layers.length;
   stage.classList.toggle('attracting', !!idle);
   if (anim) {
     let t = Math.min(1, (now - anim.t0) / anim.dur);
@@ -319,7 +416,8 @@ stage.querySelector('.prev').onclick = (e) => { e.stopPropagation(); step(-1); }
 stage.querySelector('.next').onclick = (e) => { e.stopPropagation(); step(1); };
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && pickOpen) closePick();
-  if (pickOpen) return;
+  if (e.key === 'Escape' && quizOpen) closeQuiz();
+  if (pickOpen || quizOpen) return;
   if (e.key === 'ArrowRight') step(1);
   if (e.key === 'ArrowLeft') step(-1);
 });
@@ -356,6 +454,7 @@ $('spinBtn').classList.toggle('on', autoSpin);
   stage.addEventListener('pointerdown', () => hint.classList.add('gone'));
   mountCut(); renderList(); updateInfo();
   if (Q.has('pick')) openPick();
+  if (Q.has('quiz')) openQuiz();
   requestAnimationFrame(tick);
 })();
 if (Q.has('debug')) window.__bb = { state, draw: () => draw(), get anim() { return anim; }, get idleMs() { return performance.now() - lastInput; }, STANDBY_MS };

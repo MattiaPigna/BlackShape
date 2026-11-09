@@ -11,3 +11,6 @@ da-sistemare/*
 !da-sistemare/bb-busto-*.png
 Screenshot*.png
 __pycache__/
+
+# pacchetto per il Raspberry (tools/prepara-pi.py)
+dist/

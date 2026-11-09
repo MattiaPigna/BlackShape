@@ -328,7 +328,7 @@ body.gallery {
 /* ---------- STANDBY: logo a tutto schermo, dietro la testa continua a girare ---------- */
 #standby {
   position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(42,10,11,.9) 0%, rgba(10,5,5,.96) 60%, rgba(3,2,2,.99) 100%);
+  background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(42,10,11,.86) 0%, rgba(10,5,5,.97) 42%, rgb(5,3,3) 62%);
   opacity: 0; pointer-events: none; transition: opacity 1.2s ease;
 }
 #standby.on { opacity: 1; pointer-events: auto; cursor: pointer; }
@@ -353,3 +353,69 @@ body.gallery {
 }
 @keyframes sb-glow { 50% { filter: drop-shadow(0 0 44px rgba(196,22,28,.75)); } }
 @keyframes sb-razor { 0%, 100% { transform: translateX(-6px) rotate(-2deg); } 50% { transform: translateX(6px) rotate(2deg); } }
+
+/* ---------- SCHEDE DEL TAGLIO (ritocco, prodotto, durata) ---------- */
+.cut-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: .3em .7em; margin-top: .45em; }
+.cut-tags span { font-size: .82em; color: #d9cfbf; white-space: nowrap; }
+.cut-tags b { color: var(--red-hi); font-weight: 400; margin-right: .3em; }
+.pk-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: .5em 1.4em; margin-top: 1.4vh; }
+.pk-tags span { font-size: 1em; color: var(--bone); white-space: nowrap; }
+.pk-tags b { color: var(--red-hi); font-weight: 400; margin-right: .4em; }
+
+/* scheda "Trova" accanto a Classici / Moderni */
+.tabs .tab-quiz { color: var(--red-hi); flex: .9; }
+
+/* ---------- QUIZ "TROVA IL TUO TAGLIO" ---------- */
+#quiz {
+  position: fixed; inset: 0; z-index: 55; display: flex; align-items: center; justify-content: center;
+  background: rgba(4,3,3,.94); backdrop-filter: blur(4px);
+  opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+#quiz.on { opacity: 1; pointer-events: auto; }
+.qz-card { width: min(94vw, 150vh); text-align: center; padding: var(--gap); }
+.qz-k { color: var(--red-hi); font-style: italic; letter-spacing: .2em; text-transform: uppercase; font-size: .95em; }
+.qz-step { color: var(--muted); letter-spacing: .12em; text-transform: uppercase; font-size: .8em; margin-top: 1.6vh; }
+.qz-q {
+  font-family: 'Cinzel', serif; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+  font-size: clamp(20px, 6vh, 60px); line-height: 1.1; margin: .4em 0 .8em;
+  text-shadow: 0 0 30px rgba(196,22,28,.4);
+}
+.qz-opts { display: flex; gap: 1.2vw; justify-content: center; }
+.qz-opts > button:not(.qz-cut) {
+  flex: 1; max-width: 32vh; min-height: clamp(70px, 18vh, 170px); padding: .6em;
+  border: 1px solid rgba(196,22,28,.55); background: linear-gradient(180deg, rgba(40,12,13,.9), rgba(14,8,8,.9));
+  font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  font-size: clamp(12px, 2.6vh, 24px);
+}
+.qz-opts > button:not(.qz-cut):active { background: rgba(196,22,28,.45); }
+.qz-res .qz-cut {
+  flex: 1; max-width: 40vh; padding: 0; border: 1px solid rgba(196,22,28,.5); background: #151313;
+  display: flex; flex-direction: column; align-items: center; padding-bottom: .8em;
+}
+.qz-res .qz-cut img { width: 100%; aspect-ratio: 1 / 1; display: block; }
+.qz-res .qz-cut .nm {
+  font-family: 'Cinzel', serif; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; font-size: 1.1em; margin-top: .5em;
+}
+.qz-res .qz-cut .it { color: var(--muted); font-style: italic; font-size: .9em; }
+.qz-res .qz-cut .cut-tags { padding: 0 .4em; }
+.qz-bar { display: flex; justify-content: center; gap: 1em; margin-top: 2.4vh; }
+.qz-bar button {
+  min-height: 40px; padding: .5em 1.4em; border: 1px solid rgba(233,225,210,.3); background: rgba(10,8,8,.7);
+  font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: .85em;
+}
+
+/* pulsante quiz nello standby */
+.sb-quiz {
+  margin-top: 3.4vh; min-height: 44px; padding: .7em 1.6em; border: 1px solid var(--red-hi);
+  background: rgba(196,22,28,.18); color: var(--bone);
+  font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  font-size: clamp(10px, 1.9vh, 18px);
+}
+.sb-quiz:active { background: rgba(196,22,28,.5); }
+
+@media (max-height: 520px) {
+  .cut-tags span { font-size: 10px; }
+  .qz-res .qz-cut { max-width: 30vw; }
+  .qz-res .qz-cut .cut-tags { display: none; }
+  .sb-touch { margin-top: 3vh; }
+}
