@@ -6,7 +6,7 @@ Funziona **offline** (font e immagini sono nella cartella).
 ## Cosa fa
 - **Testa che gira**: 10 viste per taglio prese dai fogli AI, si gira trascinando col dito.
   Toccando un taglio la testa fa un giro completo e si ferma di fronte.
-- **20 tagli** divisi in *Classici* e *Moderni*, con miniature, descrizione e schede
+- **28 tagli** divisi in *Classici* e *Moderni*, con miniature, descrizione e schede
   (tempo in poltrona, ogni quanto ritoccarlo, prodotto). Testi e schede in `tagli/tagli.json`.
 - **Scelgo questo**: scheda a tutto schermo con fronte, profilo e nuca da mostrare al barbiere.
 - **Viso**: scheda accanto a Classici e Moderni, tocchi la forma del tuo viso e vedi tutti i tagli adatti.
@@ -15,8 +15,6 @@ Funziona **offline** (font e immagini sono nella cartella).
   (`visi`: per ogni forma i tagli consigliati `si` e quelli da evitare `no`).
 - **Vetrina** dopo 8 s senza tocchi (gira da sola e cambia taglio) e **standby** con il logo
   dopo 45 s (`?standby=secondi` per cambiarlo).
-
-Il vecchio showroom 3D resta disponibile aggiungendo `?3d` all'indirizzo (solo sul PC).
 
 ## Installazione su Raspberry Pi
 Consigliato: Raspberry Pi 4 o 5 (va bene anche da 1 GB) con **Raspberry Pi OS Lite** (senza desktop).
