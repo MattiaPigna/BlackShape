@@ -13,10 +13,17 @@ fi
 command -v unclutter >/dev/null && unclutter -idle 3 &
 
 BROWSER=$(command -v chromium-browser || command -v chromium)
+
+# senza desktop (Raspberry Pi OS Lite + cage, vedi installa-kiosk.sh) Chromium deve usare Wayland
+EXTRA=()
+[ -n "$WAYLAND_DISPLAY" ] && [ -z "$DISPLAY" ] && EXTRA+=(--ozone-platform=wayland)
+# modalita' leggera (Raspberry da 1 GB): un solo processo per le pagine, niente cache su disco
+[ "$1" = lite ] && EXTRA+=(--renderer-process-limit=1 --disk-cache-size=1 --disable-features=Translate,MediaRouter)
 exec "$BROWSER" \
   --kiosk --noerrdialogs --disable-infobars --incognito \
   --check-for-update-interval=31536000 \
   --disable-pinch --overscroll-history-navigation=0 \
   --ignore-gpu-blocklist --enable-gpu-rasterization \
   --password-store=basic \
+  "${EXTRA[@]}" \
   "http://127.0.0.1:$PORT/${1:+?$1}"

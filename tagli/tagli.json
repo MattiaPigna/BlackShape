@@ -19,6 +19,12 @@
       "desc": "Macchinetta uniforme su tutta la testa. Pulito, deciso, senza compromessi." },
     { "id": "man-bun", "gruppo": "Classici", "nome": "Man Bun", "it": "Codino raccolto",
       "desc": "Capelli lunghi raccolti in un nodo dietro la testa." },
+    { "id": "side-part", "gruppo": "Classici", "nome": "Side Part", "it": "Riga laterale",
+      "desc": "Riga netta di lato, sopra pettinato con cura, lati sfoltiti a forbice. Il taglio del gentiluomo." },
+    { "id": "quiff", "gruppo": "Classici", "nome": "Quiff", "it": "Ciuffo alzato",
+      "desc": "Ciuffo spazzolato in su e indietro con volume, effetto opaco, lati sfumati." },
+    { "id": "undercut", "gruppo": "Classici", "nome": "Undercut", "it": "Lati rasati, sopra lungo",
+      "desc": "Lati e nuca rasati con stacco netto, sopra lungo tirato indietro. Contrasto da boss." },
 
     { "id": "low-taper-fade", "gruppo": "Moderni", "nome": "Low Taper Fade", "it": "Sfumatura bassa ai bordi",
       "desc": "Sfumate solo basette e nuca, appena sopra l'orecchio. Il resto resta pieno." },
@@ -39,6 +45,8 @@
     { "id": "modern-mullet", "gruppo": "Moderni", "nome": "Modern Mullet", "it": "Mullet moderno",
       "desc": "Corto davanti e ai lati, lungo dietro sulla nuca. Ribelle ma curato." },
     { "id": "mohawk-fade", "gruppo": "Moderni", "nome": "Mohawk Fade", "it": "Cresta con sfumatura",
-      "desc": "Cresta centrale testurizzata, lati sfumati a pelle." }
+      "desc": "Cresta centrale testurizzata, lati sfumati a pelle." },
+    { "id": "high-skin-fade", "gruppo": "Moderni", "nome": "High Skin Fade", "it": "Sfumatura alta a pelle",
+      "desc": "Sfumatura a pelle che sale fino alla parte alta della testa, sopra cortissimo. Netto e aggressivo." }
   ]
 }

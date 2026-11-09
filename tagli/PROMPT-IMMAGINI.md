@@ -64,12 +64,13 @@ Oppure direttamente in `tagli\<cartella>\fronte.jpg`, `tre-quarti.jpg`, `profilo
 
 ---
 
-## 5) Capelli in 3D sul NOSTRO modello (metodo attuale)
+## 5) Foglio a 6 viste (metodo attuale)
 
 Ogni taglio = 1 sola immagine di ChatGPT + script. Niente piu' foto separate per vista.
 
-1. Nuova chat ChatGPT, allega 4 immagini: `modelli/viste/foglio-6viste.png` (testa calva da 6 angoli)
-   + le 3 foto del taglio (`da-sistemare/tellbarber/<id>__front/side/back.png`).
+1. Nuova chat ChatGPT, allega `modelli/viste/foglio-6viste.png` (testa calva da 6 angoli)
+   e, se le hai, 3 foto del taglio su una persona vera (fronte, lato, nuca).
+   Senza foto si puo' fare lo stesso: basta descrivere bene il taglio nella parte in MAIUSCOLO.
 2. Prompt (cambia solo la parte in MAIUSCOLO):
 
 ```
@@ -84,10 +85,7 @@ mustache, eyebrows, closed eyes, ears, each pose, camera angle, framing, lightin
 Do not add clothes. Landscape 3:2 image.
 ```
 
-3. Salva il risultato come `da-sistemare/bb-foglio6-<id>.png`.
-4. Modello 3D dei capelli: `bash tools/fai-guscio.sh <id>`
-   - tagli con frangia sulla fronte: `BB_FRANGIA=1` davanti a `python tools/guscio-capelli.py <id>`
-   - capelli lunghi su orecchie/nuca: `BB_LUNGHI=1`
-5. Render: avvia `python tools/server-salva.py`, apri `http://127.0.0.1:8766/tools/render-guscio.html?id=<id>&n=120`
-   (piu' tagli: `id=a,b,c`), poi `python tools/componi-giro.py <id>`.
-6. In `galleria.js` cambia `GIRO_VER` cosi' i browser ricaricano le immagini nuove.
+3. Salva il risultato come `da-sistemare/bb-foglio6-<id>.png` (`<id>` = nome della cartella, es. `side-part`).
+4. Aggiungi il taglio in `tagli/tagli.json` (id, gruppo, nome, it, desc) e crea la cartella `tagli/<id>/`.
+5. `python tools/prepara-viste.py 512 <id>` -> crea `tagli/<id>/viste/v0..v9.webp` (stessa grandezza in tutte le viste).
+6. In `galleria.js` cambia `VISTE_VER` cosi' i browser ricaricano le immagini nuove.

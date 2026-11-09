@@ -43,6 +43,26 @@ Usa la modalità leggera (meno poligoni, niente antialiasing):
 Per renderla permanente modifica l'ultima riga di `start.sh` sostituendo
 `${1:+?$1}` con `?lite`.
 
+### Raspberry da 1 GB di RAM (senza desktop)
+Installa **Raspberry Pi OS Lite** (senza desktop) sulla scheda SD, copia la cartella e poi:
+```bash
+cd ~/blackblade
+chmod +x *.sh
+./installa-kiosk.sh
+sudo reboot
+```
+All'accensione parte solo l'app a schermo intero. Uso della RAM: circa 400-500 MB su 1 GB.
+La modalita' 3D (`?3d`) non e' adatta a 1 GB.
+
+## Viste dei tagli
+La galleria mostra 10 viste per taglio prese direttamente dal foglio AI (`da-sistemare/bb-foglio6-<id>.png`,
+griglia 3x2): i 6 pannelli e 4 di questi specchiati per l'altro lato. Dopo aver aggiunto o rifatto un foglio:
+```bash
+python tools/prepara-viste.py                 # tutti i tagli (512 px, risoluzione piena del foglio)
+python tools/prepara-viste.py 512 pompadour   # un solo taglio
+```
+poi cambia `VISTE_VER` in `galleria.js` cosi' il browser ricarica le immagini.
+
 ## Provarla su Windows
 Doppio clic su `avvia-su-windows.bat` (serve Python), si apre il browser.
 

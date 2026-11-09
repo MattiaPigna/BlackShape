@@ -1,0 +1,2 @@
+# gli script girano sul Raspberry: sempre a capo in stile Linux, anche se la cartella viene da Windows
+*.sh text eol=lf
