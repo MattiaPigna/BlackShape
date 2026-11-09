@@ -368,3 +368,21 @@ body.gallery {
 .face-pick button.on { border-color: var(--red-hi); background: rgba(196,22,28,.3); color: #fff; }
 .face-pick button.on svg { fill: rgba(255,59,59,.25); }
 #side .cuts .face-note { grid-column: 1 / -1; margin: .2em 0 0; color: var(--muted); font-style: italic; font-size: .85em; text-align: center; }
+
+/* ---------- colore dei capelli: pallini sotto Fronte/Profilo/Nuca ---------- */
+.colors { display: flex; align-items: center; justify-content: center; gap: .45em; margin-top: calc(var(--gap) * .6); }
+.colors .cl-k, .colors .cl-n { font-size: .72em; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.colors .cl-n { min-width: 6.5em; text-align: left; color: var(--bone); }
+.colors .cl-k { min-width: 6.5em; text-align: right; }
+.colors button {
+  width: 34px; height: 34px; padding: 0; border-radius: 50%; display: grid; place-items: center;
+  border: 2px solid transparent; background: none; cursor: pointer;
+}
+.colors button i { width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 -3px 6px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.15); }
+.colors button.on { border-color: var(--red-hi); }
+@media (max-height: 520px) {
+  .colors { margin-top: 4px; gap: .2em; }
+  .colors button { width: 30px; height: 30px; }
+  .colors button i { width: 19px; height: 19px; }
+  .colors .cl-k, .colors .cl-n { font-size: 10px; min-width: 6em; }
+}

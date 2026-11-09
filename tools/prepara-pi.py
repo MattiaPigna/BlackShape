@@ -19,7 +19,7 @@ if os.path.isdir(OUT):
 cuts = json.load(open(os.path.join(ROOT, 'tagli', 'tagli.json'), encoding='utf-8'))['tagli']
 missing = []
 for c in cuts:
-    found = sorted(glob.glob(f"tagli/{c['id']}/viste/*.webp", root_dir=ROOT))
+    found = sorted(glob.glob(f"tagli/{c['id']}/viste/*.webp", root_dir=ROOT) + glob.glob(f"tagli/{c['id']}/viste/*/*.webp", root_dir=ROOT))
     if not found:
         missing.append(c['id'])
     FILES += found
