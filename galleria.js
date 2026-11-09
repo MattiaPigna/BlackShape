@@ -29,6 +29,8 @@ const SPIN_MS = 3200;           // scegliendo un taglio la testa fa un giro comp
 const CUT_EVERY_DEG = 360;      // in vetrina: cambia taglio dopo un giro completo
 
 document.body.classList.add('gallery');
+// ?semplice: niente grana, fumo e viraggio seppia (se sul Raspberry rallenta)
+if (Q.has('semplice')) document.body.classList.add('semplice');
 
 const loadImg = (src) => new Promise((ok) => {
   const im = new Image();
@@ -51,6 +53,9 @@ stage.id = 'stage';
 stage.innerHTML = `
   <div class="frame">
     <canvas class="view"></canvas>
+    <div class="light"></div>
+    <div class="smoke s1"></div><div class="smoke s2"></div><div class="smoke s3"></div>
+    <div class="deco"></div>
     <div class="empty"><div class="em-t">In preparazione</div><div class="em-s">Questo taglio arriva presto sul modello.</div></div>
     <button class="nav prev" aria-label="Ruota a sinistra">&#8249;</button>
     <button class="nav next" aria-label="Ruota a destra">&#8250;</button>
@@ -71,6 +76,9 @@ side.innerHTML = `
   <div class="tabs" id="tabs"></div>`;
 document.body.appendChild(side);
 side.prepend(document.querySelector('.brand'));
+const orn = document.createElement('div');
+orn.className = 's-orn'; orn.innerHTML = '<span>◆</span>';
+side.querySelector('.brand').after(orn);
 const info = side.querySelector('.s-info');
 ['cutIt', 'cutName', 'cutDesc'].forEach((id) => info.appendChild($(id)));
 const tagsEl = document.createElement('div');
@@ -208,6 +216,7 @@ quiz.addEventListener('pointerdown', touch);
 const standby = document.createElement('div');
 standby.id = 'standby';
 standby.innerHTML = `
+  <div class="smoke s1"></div><div class="smoke s2"></div><div class="smoke s3"></div>
   <div class="sb-logo">
     ${document.querySelector('.brand .razor').outerHTML}
     <h1>BLACKBLADE</h1>
