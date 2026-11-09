@@ -6,6 +6,26 @@
     { "id": "profilo", "nome": "Profilo" },
     { "id": "nuca", "nome": "Nuca" }
   ],
+  "visi": {
+    "ovale": { "nome": "Ovale", "come": "Più lungo che largo, fronte appena più larga del mento, linee morbide.",
+      "si": ["slick-back", "pompadour", "side-part", "quiff", "ivy-league", "undercut", "crew-cut", "textured-crop", "low-taper-fade", "mid-taper-fade", "two-block", "man-bun", "buzz-cut", "faux-hawk", "drop-fade"],
+      "no": [] },
+    "rotondo": { "nome": "Rotondo", "come": "Largo quasi quanto è lungo, guance piene, mento e fronte poco marcati.",
+      "si": ["pompadour", "quiff", "faux-hawk", "mohawk-fade", "high-skin-fade", "undercut", "flat-top", "burst-fade", "side-part", "slick-back", "mid-taper-fade"],
+      "no": ["buzz-cut", "caesar-cut", "french-crop", "edgar-cut", "curly-taper", "middle-part", "wolf-cut"] },
+    "quadrato": { "nome": "Quadrato", "come": "Mascella larga e squadrata, fronte e mascella di larghezza simile.",
+      "si": ["crew-cut", "buzz-cut", "buzz-fade", "edgar-cut", "ivy-league", "side-part", "slick-back", "caesar-cut", "high-skin-fade", "low-taper-fade", "undercut", "textured-crop"],
+      "no": ["mohawk-fade", "modern-mullet", "flat-top"] },
+    "rettangolare": { "nome": "Rettangolare", "come": "Viso lungo e stretto, fronte alta, mascella dritta.",
+      "si": ["french-crop", "caesar-cut", "textured-crop", "crops-fade", "middle-part", "side-part", "low-taper-fade", "ivy-league", "two-block", "curly-taper", "wolf-cut", "drop-fade"],
+      "no": ["pompadour", "quiff", "faux-hawk", "mohawk-fade", "flat-top", "high-skin-fade", "man-bun"] },
+    "triangolare": { "nome": "Triangolare", "come": "Mascella più larga degli zigomi, fronte stretta.",
+      "si": ["pompadour", "quiff", "textured-crop", "two-block", "middle-part", "curly-taper", "faux-hawk", "slick-back", "side-part", "modern-mullet", "wolf-cut"],
+      "no": ["buzz-cut", "buzz-fade", "high-skin-fade", "flat-top"] },
+    "diamante": { "nome": "A diamante", "come": "Zigomi larghi, fronte e mento stretti, mento a punta.",
+      "si": ["middle-part", "two-block", "wolf-cut", "textured-crop", "french-crop", "curly-taper", "man-bun", "modern-mullet", "side-part", "low-taper-fade", "crew-cut"],
+      "no": ["high-skin-fade", "buzz-fade", "mohawk-fade", "flat-top", "undercut", "burst-fade"] }
+  },
   "tagli": [
     { "id": "slick-back", "gruppo": "Classici", "nome": "Slick Back", "it": "Pettinato all'indietro",
       "desc": "Lunghezze sopra tirate indietro con brillantina, lati corti e puliti. Eleganza da boss.",

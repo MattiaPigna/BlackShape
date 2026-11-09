@@ -39,7 +39,7 @@ const loadImg = (src) => new Promise((ok) => {
 });
 
 // ---------- stato ----------
-let CUTS = [], GROUPS = [];
+let CUTS = [], GROUPS = [], VISI = {};
 const state = { cut: 0, ang: 0, tab: null };
 let autoSpin = !Q.has('nospin');
 // all'avvio la vetrina parte subito, il logo di standby arriva dopo STANDBY_MS
@@ -102,13 +102,28 @@ function tagsHtml(C, full) {
   if (!I) return '';
   const t = full
     ? [['✂', `In poltrona ${I.durata}`], ['⟳', `Ritocco ogni ${I.ritocco}`], ['◆', `Prodotto: ${I.prodotto}`],
-       ['☀', I.piega ? `Piega: ${I.piega} min al mattino` : 'Pronto senza piega']]
+       ['☀', I.piega ? `Piega: ${I.piega} min al mattino` : 'Pronto senza piega'],
+       ...(visiPer(C).length ? [['◎', visiPer(C).length === Object.keys(VISI).length ? 'Sta bene con ogni forma di viso'
+         : `Ideale per viso ${visiPer(C).map((k) => VISI[k].nome.toLowerCase()).join(', ')}`]] : [])]
     : [['✂', I.durata], ['⟳', `ogni ${I.ritocco.replace('settimane', 'sett.')}`], ['◆', I.prodotto]];
   return t.map(([ic, tx]) => `<span><b>${ic}</b>${esc(tx)}</span>`).join('');
 }
 
-// ---------- "Trova il tuo taglio": 3 domande, poi i 3 tagli piu' adatti ----------
+// ---------- forma del viso (campo "visi" in tagli.json) ----------
+const FACE_SVG = {
+  ovale: '<ellipse cx="30" cy="40" rx="19" ry="30"/>',
+  rotondo: '<circle cx="30" cy="41" r="25"/>',
+  quadrato: '<rect x="7" y="13" width="46" height="56" rx="9"/>',
+  rettangolare: '<rect x="12" y="5" width="36" height="70" rx="11"/>',
+  triangolare: '<path d="M21 9H39Q44 9 45 17L54 60Q55 73 43 73H17Q5 73 6 60L15 17Q16 9 21 9Z"/>',
+  diamante: '<path d="M30 5Q36 5 40 19L53 40L39 66Q33 76 30 76Q27 76 21 66L7 40L20 19Q24 5 30 5Z"/>',
+};
+const faceSvg = (k) => `<svg viewBox="0 0 60 80" aria-hidden="true">${FACE_SVG[k] || '<text x="30" y="52" text-anchor="middle">?</text>'}</svg>`;
+const visiPer = (C) => Object.keys(VISI).filter((k) => VISI[k].si.includes(C.id));
+
+// ---------- "Trova il tuo taglio": viso + 3 domande, poi i 3 tagli piu' adatti ----------
 const QUIZ = [
+  { q: 'Che forma ha il tuo viso?', k: 'viso', faces: true },
   { q: 'Come li vuoi?', k: 'lunghezza', opts: [['Corti', 'corto'], ['Medi', 'medio'], ['Lunghi', 'lungo']] },
   { q: 'I lati?', k: 'sfumatura', opts: [['Sfumati', 'si'], ['Naturali', 'no'], ['Indifferente', 'x']] },
   { q: 'Quanto tempo per sistemarli al mattino?', k: 'piega', opts: [['Zero, pronti subito', '0'], ['Pochi minuti', '5'], ['Mi piace curarli', '10']] },
@@ -121,6 +136,11 @@ function quizScore(C, ans) {
   let sc = dl === 0 ? 3 : dl === 1 ? 1 : 0;
   if (ans.sfumatura === 'si' && I.sfumatura) sc += 2;
   if (ans.sfumatura === 'no' && !I.sfumatura) sc += 2;
+  const V = VISI[ans.viso];
+  if (V) {
+    if (V.no.includes(C.id)) return -1;   // da evitare per questo viso: escluso
+    if (V.si.includes(C.id)) sc += 3;
+  }
   const p = I.piega;
   if (ans.piega === '0') sc += p === 0 ? 3 : p <= 2 ? 2 : p <= 3 ? 1 : 0;
   if (ans.piega === '5') sc += p >= 3 && p <= 5 ? 2 : p <= 2 ? 1 : 0;
@@ -146,11 +166,15 @@ function renderQuiz() {
     const Qz = QUIZ[qStep];
     quiz.querySelector('.qz-step').textContent = `Domanda ${qStep + 1} di ${QUIZ.length}`;
     quiz.querySelector('.qz-q').textContent = Qz.q;
-    opts.className = 'qz-opts';
+    opts.className = 'qz-opts' + (Qz.faces ? ' qz-faces' : '');
     opts.innerHTML = '';
-    Qz.opts.forEach(([label, val]) => {
+    const list = Qz.faces
+      ? [...Object.entries(VISI).map(([k, V]) => [V.nome, k, V.come]), ['Non lo so', 'x', 'Salta questa domanda']]
+      : Qz.opts;
+    list.forEach(([label, val, hint]) => {
       const b = document.createElement('button');
-      b.textContent = label;
+      if (Qz.faces) b.innerHTML = `${faceSvg(val)}<span class="fn">${esc(label)}</span><span class="fh">${esc(hint)}</span>`;
+      else b.textContent = label;
       b.onclick = () => { touch(); qAns[Qz.k] = val; qStep++; renderQuiz(); };
       opts.appendChild(b);
     });
@@ -166,7 +190,9 @@ function renderQuiz() {
   best.forEach(({ C, idx }) => {
     const b = document.createElement('button');
     b.className = 'qz-cut';
-    b.innerHTML = `<img src="${thumbSrc(C)}" alt=""><span class="nm">${esc(C.nome)}</span><span class="it">${esc(C.it)}</span>` +
+    const fit = VISI[qAns.viso] && VISI[qAns.viso].si.includes(C.id)
+      ? `<span class="qz-fit">✓ Ideale per viso ${esc(VISI[qAns.viso].nome.toLowerCase())}</span>` : '';
+    b.innerHTML = `<img src="${thumbSrc(C)}" alt=""><span class="nm">${esc(C.nome)}</span><span class="it">${esc(C.it)}</span>${fit}` +
       `<span class="cut-tags">${tagsHtml(C, false)}</span>`;
     b.onclick = () => { closeQuiz(); selectCut(idx); spinShow(); };
     opts.appendChild(b);
@@ -436,6 +462,8 @@ $('spinBtn').classList.toggle('on', autoSpin);
   const DATA = await (await fetch('tagli/tagli.json', { cache: 'no-cache' })).json();
   CUTS = DATA.tagli;
   GROUPS = [...new Set(CUTS.map((c) => c.gruppo || ''))];
+  VISI = DATA.visi || {};
+  if (!Object.keys(VISI).length) QUIZ.shift();   // senza dati sui visi il quiz parte dalla lunghezza
   // controlla quali tagli hanno le viste (le altre si caricano quando si sceglie il taglio)
   await Promise.all(CUTS.map(async (c) => {
     c.has = !!(await loadImg(frameSrc(c, 0)));
