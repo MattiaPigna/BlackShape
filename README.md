@@ -60,7 +60,7 @@ Doppio clic su `avvia-su-windows.bat` (serve Python), si apre il browser.
 - `galleria.js`: tempi della vetrina e dello standby, angoli delle viste.
 
 Parametri utili nell'indirizzo (es. `http://127.0.0.1:8765/?cut=undercut&standby=60`):
-`cut`, `blend` (0 = scatto netto tra le viste, 1 = sempre sfumato; normale 0.35), `nospin`, `nohint`, `standby` (secondi), `pick` / `quiz` (aprono subito la scheda o il quiz).
+`cut`, `blend` (0 = scatto netto tra le viste, 1 = sempre sfumato; normale 0.2), `nospin`, `nohint`, `standby` (secondi), `pick` / `quiz` (aprono subito la scheda o il quiz).
 
 ## Archivio
 `modelli/god+father_+15cm.stl` e' il busto originale da cui e' nato il modello dei fogli AI.

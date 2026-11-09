@@ -13,7 +13,7 @@ const ANGLES = [0, 45, 90, 125, 155, 180, 205, 235, 270, 315];
 const VISTE_VER = 'ai7';   // cambia quando si rigenerano le viste (il browser ricarica le immagini)
 // passaggio tra due viste vicine: per la parte centrale del tratto le due immagini si dissolvono l'una
 // nell'altra seguendo l'angolo; nel resto si vede una sola vista nitida. 0 = scatto netto, 1 = sempre sfumato
-const BLEND = Math.min(1, Math.max(0, Q.has('blend') ? +Q.get('blend') : 0.35));
+const BLEND = Math.min(1, Math.max(0, Q.has('blend') ? +Q.get('blend') : 0.2));
 const frameSrc = (c, i) => `tagli/${c.id}/viste/v${i}.webp?v=${VISTE_VER}`;
 const thumbSrc = (c) => `tagli/${c.id}/viste/t.webp?v=${VISTE_VER}`;
 const angDist = (a, b) => Math.abs(((a - b) % 360 + 540) % 360 - 180);
