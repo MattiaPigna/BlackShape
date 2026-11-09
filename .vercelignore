@@ -1,0 +1,7 @@
+# sul sito servono solo index.html, galleria.js, style.css, fonts/ e tagli/
+da-sistemare/
+modelli/
+dist/
+tools/
+*.sh
+*.bat
