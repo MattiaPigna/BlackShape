@@ -3,6 +3,8 @@
 #            fronte, 3/4, profilo, profilo da dietro, 3/4 dietro, nuca (vedi tagli/PROMPT-IMMAGINI.md)
 #   uscita:  tagli/<id>/viste/v0.webp ... v9.webp
 #            v0-v5 = i 6 pannelli (lato sinistro della testa), v6-v9 = pannelli 4..1 specchiati (lato destro)
+#            se c'e' anche da-sistemare/bb-foglio6d-<id>.png (stessa griglia, testa vista da destra) v6-v9
+#            vengono da li' invece che dallo specchio: serve ai tagli con la riga da un lato
 # Gli angoli di ogni vista sono in galleria.js (ANGLES). Lo specchio inverte la riga dei capelli: per i tagli
 # con la riga da un lato le viste dell'altro lato la mostrano dalla parte opposta.
 #          t.webp = miniatura per l elenco dei tagli
@@ -45,13 +47,7 @@ def normalize(im):
     out.paste(big, (round(SIZE / 2 - neck_x * s), round(BOTTOM * SIZE - bot * s)))
     return out
 
-for path in sorted(glob.glob(os.path.join(ROOT, 'da-sistemare', 'bb-foglio6-*.png'))):
-    cut = re.match(r'bb-foglio6-(.+)\.png$', os.path.basename(path)).group(1)
-    if ONLY and cut not in ONLY:
-        continue
-    if not os.path.isdir(os.path.join(ROOT, 'tagli', cut)):
-        print(f'{cut}: cartella tagli/{cut} mancante, salto')
-        continue
+def read_panels(path):
     sheet = Image.open(path).convert('RGB')
     pw, ph = sheet.width / COLS, sheet.height / ROWS
     side = min(pw, ph)
@@ -61,7 +57,23 @@ for path in sorted(glob.glob(os.path.join(ROOT, 'da-sistemare', 'bb-foglio6-*.pn
         cx, cy = (c + 0.5) * pw, (r + 0.5) * ph
         box = tuple(round(v) for v in (cx - side / 2, cy - side / 2, cx + side / 2, cy + side / 2))
         panels.append(normalize(sheet.crop(box)))
-    views = panels + [ImageOps.mirror(panels[k]) for k in (4, 3, 2, 1)]
+    return panels
+
+for path in sorted(glob.glob(os.path.join(ROOT, 'da-sistemare', 'bb-foglio6-*.png'))):
+    cut = re.match(r'bb-foglio6-(.+)\.png$', os.path.basename(path)).group(1)
+    if ONLY and cut not in ONLY:
+        continue
+    if not os.path.isdir(os.path.join(ROOT, 'tagli', cut)):
+        print(f'{cut}: cartella tagli/{cut} mancante, salto')
+        continue
+    panels = read_panels(path)
+    right = path.replace('bb-foglio6-', 'bb-foglio6d-')
+    if os.path.exists(right):
+        # lato destro vero (stessa griglia ma testa vista da destra): niente specchio, la riga resta al suo posto
+        rp = read_panels(right)
+        views = panels + [rp[k] for k in (4, 3, 2, 1)]
+    else:
+        views = panels + [ImageOps.mirror(panels[k]) for k in (4, 3, 2, 1)]
     out = os.path.join(ROOT, 'tagli', cut, 'viste')
     os.makedirs(out, exist_ok=True)
     for i, im in enumerate(views):
@@ -69,4 +81,4 @@ for path in sorted(glob.glob(os.path.join(ROOT, 'da-sistemare', 'bb-foglio6-*.pn
     # miniatura per l'elenco dei tagli: la vista di fronte, ritagliata sulla testa
     t = views[0].crop((round(SIZE * .14), 0, round(SIZE * .86), round(SIZE * .72))).resize((200, 200), Image.LANCZOS)
     t.save(os.path.join(out, 't.webp'), 'WEBP', quality=85, method=6)
-    print(f'{cut}: {len(views)} viste')
+    print(f'{cut}: {len(views)} viste' + (' (lato destro dal foglio 6d)' if os.path.exists(right) else ''))

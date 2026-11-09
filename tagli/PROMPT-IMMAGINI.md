@@ -1,91 +1,48 @@
-# Prompt per generare le immagini dei tagli
+# Come creare le immagini di un taglio nuovo
 
-Usa sempre la stessa chat dell'AI (ChatGPT / Gemini / ecc.) per uno stesso taglio:
-così il manichino, la luce e lo sfondo restano uguali in tutte e 4 le viste.
+Ogni taglio = **1 immagine generata con ChatGPT** (foglio 3x2 con la testa da 6 angoli) + 1 script.
 
-## 1) Prima immagine di ogni taglio (vista FRONTE)
-
-Copia questo e sostituisci [TAGLIO] con la descrizione dalla tabella sotto:
-
-```
-Ultra-photorealistic studio photo of a smooth matte grey male mannequin head
-with neck and upper shoulders, realistic neutral male face, eyes closed.
-The mannequin wears a real human men's haircut: [TAGLIO].
-Real individual hair strands, natural dark brown hair color, realistic scalp
-visible through the skin fade, crisp clean barber lines, professional barbershop
-quality, freshly cut.
-Front view, head facing the camera straight on, centered, head and shoulders in frame.
-Plain dark charcoal background, soft even studio lighting, no harsh shadows,
-no text, no logo, no watermark, no props, no hands.
-Vertical portrait format 4:5, 85mm lens, sharp focus on the hair.
-```
-
-## 2) Le altre 3 viste (nella STESSA chat, subito dopo)
+## 1) Il foglio del taglio
+1. Nuova chat ChatGPT, allega `tools/foglio-6viste.png` (la testa calva da 6 angoli).
+   Se hai foto del taglio su una persona vera (fronte, lato, nuca), allegale pure: aiutano.
+2. Incolla questo prompt, cambiando solo la parte in MAIUSCOLO (nome e descrizione del taglio in inglese):
 
 ```
-Same mannequin, same haircut, same lighting, same background, same framing.
-Rotate the head: three-quarter view, turned 45 degrees to the left.
-```
-```
-Same mannequin, same haircut, same lighting, same background, same framing.
-Rotate the head: exact side profile, facing left, ear fully visible so the fade is clearly shown.
-```
-```
-Same mannequin, same haircut, same lighting, same background, same framing.
-Rotate the head: back view, showing the nape and the back of the haircut.
-```
-
-## 3) Descrizioni dei tagli ([TAGLIO])
-
-| Cartella | Descrizione da incollare |
-|---|---|
-| slick | classic slick back, all hair combed straight back with high-shine pomade, sides scissor-tapered short and neat |
-| sidepart | classic side part on the left with a sharp shaved part line, top 6 cm combed to the side, tapered sides |
-| pompadour | high voluminous pompadour, glossy pomade, tall wave at the front, short shiny tapered sides |
-| quiff | textured quiff swept up and forward, matte finish, top 7 cm, mid fade on the sides |
-| crew | crew cut, top 3 cm slightly longer at the front, sides and back clipper #2 tapered |
-| flattop | flat top, perfectly flat squared top 3 cm, faded sides, very precise edges |
-| buzz | uniform buzz cut, clipper #3 all over the head, clean natural hairline |
-| undercut | disconnected undercut, sides and back shaved with clipper #1, long top 12 cm slicked back, hard contrast |
-| lowfade | low skin fade starting just above the ear and at the nape, short textured top 4 cm pushed forward |
-| midfade | mid skin fade rising to the temples, textured messy top 4-5 cm |
-| highfade | high skin fade up to the parietal ridge, very short top 2-3 cm |
-| taper | taper fade only at the sideburns and nape, rest of the hair full, medium length 5 cm |
-| dropfade | drop fade that curves down behind the ear toward the nape, soft fringe swept forward |
-| burst | burst fade, skin-faded semicircle around the ear, full nape, textured faux hawk on top |
-| crop | textured French crop, mid skin fade, short blunt fringe on the forehead, choppy texture on top |
-| buzzfade | buzz cut clipper #2 on top, skin fade on the sides and back |
-
-## 4) Dove metterle
-
-Basta salvarle tutte in una cartella (es. `BlackShape\da-sistemare\`), con nomi qualsiasi:
-le smisto, rinomino, ritaglio e comprimo io.
-Oppure direttamente in `tagli\<cartella>\fronte.jpg`, `tre-quarti.jpg`, `profilo.jpg`, `nuca.jpg`.
-
----
-
-## 5) Foglio a 6 viste (metodo attuale)
-
-Ogni taglio = 1 sola immagine di ChatGPT + script. Niente piu' foto separate per vista.
-
-1. Nuova chat ChatGPT, allega `modelli/viste/foglio-6viste.png` (testa calva da 6 angoli)
-   e, se le hai, 3 foto del taglio su una persona vera (fronte, lato, nuca).
-   Senza foto si puo' fare lo stesso: basta descrivere bene il taglio nella parte in MAIUSCOLO.
-2. Prompt (cambia solo la parte in MAIUSCOLO):
-
-```
-Create an image. Image 1 is a 3x2 turnaround sheet (landscape 3:2) of ONE grey clay sculpture of a bald male head
-seen from 6 angles, rotating from front view (top-left) to back view (bottom-right). Images 2, 3 and 4 show the
-haircut I want, on a real man (front, side, back): NOME TAGLIO - descrizione breve. Edit image 1: give the head in
-all 6 panels exactly this haircut, as photorealistic dark brown human hair with individual strands and a realistic
-skin fade where the haircut has one. CRUCIAL: it is the SAME head and the SAME haircut in all 6 panels, so the hair
-must be perfectly consistent between panels (same strands, same volume, same color, same fade height), like a real
-3D object photographed from 6 cameras. Keep everything else identical: the 3x2 layout, the grey sculpted face,
-mustache, eyebrows, closed eyes, ears, each pose, camera angle, framing, lighting and dark background.
-Do not add clothes. Landscape 3:2 image.
+Create an image. The attached image is a 3x2 turnaround sheet (landscape 3:2) of ONE grey clay sculpture of a bald
+male head seen from 6 angles, rotating from front view (top-left) to back view (bottom-right). Edit it: give the
+head in all 6 panels this haircut: NOME TAGLIO - descrizione. Photorealistic dark brown human hair with individual
+strands and a realistic skin fade where the haircut has one. CRUCIAL: it is the SAME head and the SAME haircut in
+all 6 panels, so the hair must be perfectly consistent between panels (same strands, same volume, same color, same
+fade height), like a real 3D object photographed from 6 cameras. Keep everything else identical: the 3x2 layout,
+the grey sculpted face, mustache, eyebrows, closed eyes, ears, each pose, camera angle, framing, head size,
+lighting and dark background. Do not add clothes. Landscape 3:2 image.
 ```
 
 3. Salva il risultato come `da-sistemare/bb-foglio6-<id>.png` (`<id>` = nome della cartella, es. `side-part`).
-4. Aggiungi il taglio in `tagli/tagli.json` (id, gruppo, nome, it, desc) e crea la cartella `tagli/<id>/`.
-5. `python tools/prepara-viste.py 512 <id>` -> crea `tagli/<id>/viste/v0..v9.webp` (stessa grandezza in tutte le viste).
-6. In `galleria.js` cambia `VISTE_VER` cosi' i browser ricaricano le immagini nuove.
+
+## 2) Solo per i tagli con la riga da un lato: il lato destro
+Il foglio mostra solo il lato sinistro; l'altro lato normalmente si ottiene allo specchio, ma cosi' la riga
+cambierebbe lato. Per questi tagli si genera anche il lato destro vero:
+
+1. Nuova chat, allega `tools/foglio-6viste-destra.png` (testa calva vista da destra) e il foglio del punto 1.
+2. Prompt:
+
+```
+Create an image. Image 1 is a 3x2 turnaround sheet (landscape 3:2) of ONE grey clay sculpture of a bald male head
+seen from 6 angles from its RIGHT side, rotating from front view (top-left) to back view (bottom-right). Image 2 is
+the SAME head with a NOME TAGLIO haircut, seen from its LEFT side in the same 6 poses. Edit image 1: give the head
+in all 6 panels exactly the haircut of image 2, as it really looks from the right side of the head. The part line
+stays on the head's LEFT side exactly as in image 2 (it is NOT mirrored). Same hair length, volume, dark brown
+color, shine and fade height as image 2, photorealistic individual strands. CRUCIAL: same haircut in all 6 panels,
+consistent like a real 3D object photographed from 6 cameras. Keep everything else in image 1 identical: the 3x2
+layout, grey sculpted face, mustache, eyebrows, closed eyes, ears, each pose, camera angle, framing, head size,
+lighting and dark background. Do not add clothes. Landscape 3:2 image.
+```
+
+3. Salva come `da-sistemare/bb-foglio6d-<id>.png` (con la **d** di destra).
+
+## 3) Metterlo nell'app
+1. In `tagli/tagli.json` aggiungi il taglio (id, gruppo, nome, it, desc, info) e crea la cartella `tagli/<id>/`.
+2. `python tools/prepara-viste.py 512 <id>` -> crea le 10 viste e la miniatura in `tagli/<id>/viste/`.
+3. In `galleria.js` cambia `VISTE_VER` cosi' i browser ricaricano le immagini.
+4. Per il Raspberry: `python tools/prepara-pi.py` e copia lo zip.

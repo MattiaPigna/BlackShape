@@ -9,7 +9,6 @@
   --ink: #0a0909;
   --bone: #e9e1d2;
   --muted: #9b8f80;
-  --panel-w: clamp(190px, 21vw, 330px);
   --fs: clamp(11px, 1.55vh, 16px);
 }
 
@@ -24,8 +23,6 @@ html, body {
   overscroll-behavior: none;
 }
 button { font: inherit; color: inherit; cursor: pointer; }
-
-#scene { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; outline: none; }
 
 .vignette {
   position: fixed; inset: 0; pointer-events: none;
@@ -50,83 +47,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .brand .tag { margin: .35em 0 0; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; font-size: .78em; }
 .brand .tag em { color: var(--red-hi); text-transform: none; letter-spacing: .03em; font-size: 1.15em; }
 
-/* ---------- PANNELLI ---------- */
-.panel {
-  position: fixed; top: 2vh; bottom: 2vh; width: var(--panel-w);
-  padding: 1.6vh 1vw; overflow-y: auto; overflow-x: hidden;
-  background: linear-gradient(180deg, rgba(14,10,10,.82), rgba(8,6,6,.72));
-  border: 1px solid rgba(196,22,28,.35);
-  box-shadow: 0 0 0 1px rgba(0,0,0,.6) inset, 0 10px 40px rgba(0,0,0,.6);
-  backdrop-filter: blur(3px);
-  scrollbar-width: thin; scrollbar-color: var(--red-dk) transparent;
-}
-.panel.left { left: 1.2vw; }
-.panel.right { right: 1.2vw; }
-.panel::before {
-  content: ''; position: absolute; left: 10%; right: 10%; top: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--red), transparent);
-}
-.panel h2 {
-  font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
-  font-size: 1.02em; margin: 1.6vh 0 1vh; color: var(--bone);
-  display: flex; align-items: center; gap: .6em;
-}
-.panel h2:first-child { margin-top: .4vh; }
-.panel h2 span { color: var(--red-hi); font-size: .85em; min-width: 1.6em; }
-.panel h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(196,22,28,.6), transparent); }
-
-/* teste */
-.heads { display: grid; grid-template-columns: 1fr 1fr; gap: .8vh; }
-.head-card {
-  border: 1px solid rgba(233,225,210,.12); background: rgba(255,255,255,.02);
-  padding: 1vh .5em; text-align: center; min-height: 44px; transition: all .2s;
-}
-.head-card .n { display: block; font-family: 'Cinzel', serif; font-weight: 700; font-size: .92em; letter-spacing: .06em; }
-.head-card .r { display: block; font-style: italic; color: var(--muted); font-size: .82em; margin-top: .15em; }
-.head-card.on { border-color: var(--red); background: linear-gradient(180deg, rgba(196,22,28,.28), rgba(90,7,9,.25)); box-shadow: 0 0 18px rgba(196,22,28,.3); }
-.head-card.on .r { color: #f0b8b8; }
-
-/* colori */
-.swatches { display: flex; flex-wrap: wrap; gap: .7vh; }
-.swatch {
-  width: clamp(30px, 4.6vh, 46px); height: clamp(30px, 4.6vh, 46px); border-radius: 50%;
-  border: 2px solid rgba(233,225,210,.25); padding: 0; position: relative; transition: transform .15s;
-}
-.swatch.on { border-color: var(--red-hi); transform: scale(1.1); box-shadow: 0 0 12px rgba(255,59,59,.55); }
-.swatch-label { width: 100%; font-style: italic; color: var(--muted); font-size: .85em; margin-top: .3vh; }
-
-/* chip */
-.chips { display: flex; flex-wrap: wrap; gap: .7vh; }
-.chip {
-  border: 1px solid rgba(233,225,210,.18); background: rgba(255,255,255,.03);
-  padding: .9vh .9em; min-height: 40px; letter-spacing: .04em; transition: all .2s;
-}
-.chip.on { border-color: var(--red); background: rgba(196,22,28,.3); color: #fff; }
-
-/* tagli */
-.cuts { display: flex; flex-direction: column; gap: .6vh; }
-.cut-group {
-  font-family: 'Cinzel', serif; font-size: .78em; letter-spacing: .22em; text-transform: uppercase;
-  color: var(--muted); margin: 1vh 0 .2vh; padding-left: .2em;
-}
-.cut-group:first-child { margin-top: 0; }
-.cut {
-  display: grid; grid-template-columns: 2.4em 1fr; align-items: center; text-align: left;
-  border: 1px solid transparent; border-bottom-color: rgba(233,225,210,.08);
-  background: none; padding: 1vh .5em; min-height: 44px; transition: all .2s;
-}
-.cut .num { font-family: 'Cinzel', serif; color: var(--red-hi); font-weight: 700; font-size: .9em; }
-.cut .nm { font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: .05em; font-size: 1em; }
-.cut .sb { grid-column: 2; font-style: italic; color: var(--muted); font-size: .84em; }
-.cut.on { border-color: var(--red); background: linear-gradient(90deg, rgba(196,22,28,.35), rgba(196,22,28,.05)); }
-.cut.on .sb { color: #f0c8c8; }
-.cut.on .num { color: #fff; }
-
-/* ---------- INFO ---------- */
-.info {
-  position: fixed; left: 50%; bottom: 2.2vh; transform: translateX(-50%);
-  width: calc(100vw - 2 * var(--panel-w) - 6vw); text-align: center; pointer-events: none;
-}
+/* ---------- NOME E DESCRIZIONE DEL TAGLIO (stanno nella colonna di destra) ---------- */
+.info { display: none; }
 .cut-it { color: var(--red-hi); font-style: italic; letter-spacing: .12em; font-size: 1em; }
 .cut-name {
   font-family: 'Cinzel', serif; font-weight: 900; letter-spacing: .12em; text-transform: uppercase;
@@ -166,16 +88,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* schermi piccoli (es. display ufficiale Raspberry 800x480) */
 @media (max-height: 520px) {
-  :root { --panel-w: clamp(170px, 24vw, 230px); --fs: 11px; }
-  .cut .sb, .head-card .r { display: none; }
-  .cut-desc { display: none; }
-  .brand .tag { display: none; }
+  :root { --fs: 11px; }
 }
 
 /* ---------- GALLERIA (immagini per taglio) ----------
    sinistra: la testa grande (#stage) · destra: colonna con logo, taglio, viste, "Scelgo questo", schede e miniature (#side) */
-body:not(.gallery) .g-only { display: none; }
-body.gallery #scene, body.gallery .panel, body.gallery .info { display: none; }
 body.gallery {
   --gap: clamp(8px, 1.6vh, 22px);
   --side-w: clamp(270px, 34vw, 540px);

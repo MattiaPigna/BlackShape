@@ -5,15 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>BLACKBLADE — Barberia</title>
 <link rel="stylesheet" href="style.css">
-<script type="importmap">
-{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/" } }
-</script>
 </head>
 <body>
-  <canvas id="scene"></canvas>
   <div class="vignette"></div>
 
-  <!-- LOGO -->
+  <!-- LOGO (galleria.js lo sposta nella colonna di destra) -->
   <header class="brand">
     <svg class="razor" viewBox="0 0 120 40" aria-hidden="true">
       <path d="M4 22 L70 10 Q78 9 80 14 L82 20 L8 26 Z" fill="#d11a1a"/>
@@ -27,34 +23,8 @@
     </div>
   </header>
 
-  <!-- PANNELLO SINISTRO -->
-  <aside class="panel left">
-    <div class="g-only">
-      <h2><span>I</span> Le viste</h2>
-      <div id="thumbs" class="thumbs"></div>
-    </div>
-    <h2><span>I</span> La Famiglia</h2>
-    <div id="heads" class="heads"></div>
-
-    <h2><span>II</span> Colore</h2>
-    <div id="colors" class="swatches"></div>
-
-    <h2><span>III</span> Barba</h2>
-    <div id="beards" class="chips"></div>
-
-    <h2><span>IV</span> Accessori</h2>
-    <div class="chips">
-      <button id="hatBtn" class="chip">Fedora</button>
-    </div>
-  </aside>
-
-  <!-- PANNELLO DESTRO -->
-  <aside class="panel right">
-    <h2><span>✦</span> I Tagli</h2>
-    <div id="cuts" class="cuts"></div>
-  </aside>
-
-  <!-- INFO TAGLIO -->
+  <!-- elenco dei tagli e informazioni (galleria.js li sposta nella colonna di destra) -->
+  <div id="cuts" class="cuts"></div>
   <footer class="info">
     <div class="cut-it" id="cutIt"></div>
     <div class="cut-name" id="cutName"></div>
@@ -67,17 +37,13 @@
     </div>
   </footer>
 
-  <div id="loading" class="loading">Il Don sta arrivando…</div>
+  <div id="loading" class="loading"></div>
 
   <div id="hint" class="hint">
     <div class="hand">☝</div>
-    Trascina per ruotare · Pizzica o rotella per lo zoom
+    Trascina col dito per girare la testa
   </div>
 
-  <!-- di default: galleria di immagini; con ?3d il vecchio showroom 3D -->
-  <script type="module">
-    if (new URLSearchParams(location.search).has('3d')) import('./app.js');
-    else import('./galleria.js');
-  </script>
+  <script type="module" src="galleria.js"></script>
 </body>
 </html>
