@@ -41,6 +41,29 @@ lighting and dark background. Do not add clothes. Landscape 3:2 image.
 
 3. Salva come `da-sistemare/bb-foglio6d-<id>.png` (con la **d** di destra).
 
+## 2b) I vestiti (smoking)
+Le viste nell'app hanno lo smoking. Per ogni foglio del punto 1 (e del punto 2, se c'e'):
+1. Nuova chat, allega **il foglio del taglio** (`da-sistemare/bb-foglio6-<id>.png`).
+2. Prompt (cambia solo NOME TAGLIO):
+
+```
+Create an image. The attached image is a 3x2 turnaround sheet (landscape 3:2) of ONE grey clay sculpture of a male
+head with NOME TAGLIO haircut, seen from 6 angles rotating from front view (top-left) to back view (bottom-right).
+Edit it: dress the figure in all 6 panels in a classic 1940s formal outfit: black tuxedo jacket with satin peak
+lapels, crisp white dress shirt with a turned-down collar, black silk bow tie, and a small red rose boutonniere on
+the lapel. Only the collar, bow tie, lapels and the top of the shoulders are visible, cropped by the bottom edge of
+each panel, like a bust portrait. The clothes are photorealistic real fabric (not clay) and they are the SAME outfit
+in all 6 panels, consistent like a real 3D object photographed from 6 cameras, turning together with the head.
+CRUCIAL: keep the head exactly identical in every panel: same hair (same strands, volume, dark brown color, fade,
+part line), same grey sculpted face, mustache, eyebrows, closed eyes, ears, same pose, camera angle, framing and head
+size and position (do NOT zoom out, do NOT move or shrink the head, the whole hair must stay visible inside each
+panel). Keep the 3x2 layout, lighting and dark background. Landscape 3:2 image.
+```
+   Per il lato destro: aggiungi "seen from its RIGHT side," dopo "seen" e metti la rosa "on the figure's LEFT lapel
+   (the lapel on the far side from this camera, so it is mostly hidden from this side)".
+3. Salva come `da-sistemare/bb-busto6-<id>.png` (lato destro: `bb-busto6d-<id>.png`).
+   `prepara-viste.py` usa questi fogli quando ci sono, altrimenti quelli senza vestiti.
+
 ## 3) Metterlo nell'app
 1. In `tagli/tagli.json` aggiungi il taglio (id, gruppo, nome, it, desc, info) e crea la cartella `tagli/<id>/`.
 2. `python tools/prepara-viste.py 512 <id>` -> crea le 10 viste e la miniatura in `tagli/<id>/viste/`.

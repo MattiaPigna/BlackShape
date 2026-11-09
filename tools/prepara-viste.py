@@ -8,6 +8,9 @@
 # Gli angoli di ogni vista sono in galleria.js (ANGLES). Lo specchio inverte la riga dei capelli: per i tagli
 # con la riga da un lato le viste dell'altro lato la mostrano dalla parte opposta.
 #          t.webp = miniatura per l elenco dei tagli
+# Versione con i vestiti (smoking): se c'e' da-sistemare/bb-busto6-<id>.png (stesso foglio con lo smoking,
+# ottenuto modificando il foglio originale con ChatGPT) si usa quello, e bb-busto6d-<id>.png per il lato destro.
+# I pannelli col busto arrivano fino ai bordi: si ritagliano cosi' come sono, senza riportare la testa a misura.
 # Uso: python tools/prepara-viste.py [lato=512] [id ...]     (senza id: tutti i fogli trovati)
 import glob, os, re, sys
 import numpy as np
@@ -47,7 +50,7 @@ def normalize(im):
     out.paste(big, (round(SIZE / 2 - neck_x * s), round(BOTTOM * SIZE - bot * s)))
     return out
 
-def read_panels(path):
+def read_panels(path, norm=True):
     sheet = Image.open(path).convert('RGB')
     pw, ph = sheet.width / COLS, sheet.height / ROWS
     side = min(pw, ph)
@@ -56,7 +59,8 @@ def read_panels(path):
         c, r = n % COLS, n // COLS
         cx, cy = (c + 0.5) * pw, (r + 0.5) * ph
         box = tuple(round(v) for v in (cx - side / 2, cy - side / 2, cx + side / 2, cy + side / 2))
-        panels.append(normalize(sheet.crop(box)))
+        crop = sheet.crop(box)
+        panels.append(normalize(crop) if norm else crop.resize((SIZE, SIZE), Image.LANCZOS))
     return panels
 
 for path in sorted(glob.glob(os.path.join(ROOT, 'da-sistemare', 'bb-foglio6-*.png'))):
@@ -66,11 +70,15 @@ for path in sorted(glob.glob(os.path.join(ROOT, 'da-sistemare', 'bb-foglio6-*.pn
     if not os.path.isdir(os.path.join(ROOT, 'tagli', cut)):
         print(f'{cut}: cartella tagli/{cut} mancante, salto')
         continue
-    panels = read_panels(path)
-    right = path.replace('bb-foglio6-', 'bb-foglio6d-')
+    busto = path.replace('bb-foglio6-', 'bb-busto6-')
+    norm = not os.path.exists(busto)
+    if not norm:
+        path = busto
+    panels = read_panels(path, norm)
+    right = path.replace('bb-foglio6-', 'bb-foglio6d-').replace('bb-busto6-', 'bb-busto6d-')
     if os.path.exists(right):
         # lato destro vero (stessa griglia ma testa vista da destra): niente specchio, la riga resta al suo posto
-        rp = read_panels(right)
+        rp = read_panels(right, norm)
         views = panels + [rp[k] for k in (4, 3, 2, 1)]
     else:
         views = panels + [ImageOps.mirror(panels[k]) for k in (4, 3, 2, 1)]
@@ -81,4 +89,4 @@ for path in sorted(glob.glob(os.path.join(ROOT, 'da-sistemare', 'bb-foglio6-*.pn
     # miniatura per l'elenco dei tagli: la vista di fronte, ritagliata sulla testa
     t = views[0].crop((round(SIZE * .14), 0, round(SIZE * .86), round(SIZE * .72))).resize((200, 200), Image.LANCZOS)
     t.save(os.path.join(out, 't.webp'), 'WEBP', quality=85, method=6)
-    print(f'{cut}: {len(views)} viste' + (' (lato destro dal foglio 6d)' if os.path.exists(right) else ''))
+    print(f'{cut}: {len(views)} viste' + ('' if norm else ' (smoking)') + (' (lato destro dal foglio 6d)' if os.path.exists(right) else ''))

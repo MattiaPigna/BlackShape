@@ -44,7 +44,8 @@ Per aggiornare l'app sul Raspberry: rifai il pacchetto, copialo e scompattalo so
 La galleria mostra 10 viste per taglio prese direttamente dal foglio AI (`da-sistemare/bb-foglio6-<id>.png`,
 griglia 3x2): i 6 pannelli e 4 di questi specchiati per l'altro lato. Per i tagli con la riga da un lato c'e' anche
 il foglio del lato destro (`bb-foglio6d-<id>.png`): se esiste, le viste di destra vengono da li'
-invece che dallo specchio. Dopo aver aggiunto o rifatto un foglio:
+invece che dallo specchio. Le viste dell'app hanno lo smoking: vengono dai fogli `bb-busto6-<id>.png`
+(lo stesso foglio con i vestiti aggiunti da ChatGPT, vedi `tagli/PROMPT-IMMAGINI.md`). Dopo aver aggiunto o rifatto un foglio:
 ```bash
 python tools/prepara-viste.py                 # tutti i tagli (512 px, risoluzione piena del foglio)
 python tools/prepara-viste.py 512 pompadour   # un solo taglio

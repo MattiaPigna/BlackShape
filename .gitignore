@@ -2,6 +2,8 @@
 da-sistemare/*
 !da-sistemare/bb-foglio6-*.png
 !da-sistemare/bb-foglio6d-*.png
+!da-sistemare/bb-busto6-*.png
+!da-sistemare/bb-busto6d-*.png
 Screenshot*.png
 __pycache__/
 
