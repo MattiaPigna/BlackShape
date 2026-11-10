@@ -368,3 +368,50 @@ body.gallery {
 .face-pick button.on { border-color: var(--red-hi); background: rgba(196,22,28,.3); color: #fff; }
 .face-pick button.on svg { fill: rgba(255,59,59,.25); }
 #side .cuts .face-note { grid-column: 1 / -1; margin: .2em 0 0; color: var(--muted); font-style: italic; font-size: .85em; text-align: center; }
+
+/* ---------- TELEFONO (body.mobile, riconosciuto in galleria.js; ?mobile=1 per provarlo) ----------
+   in verticale: testa in alto a tutta larghezza, sotto la colonna (logo, taglio, viste, miniature) che scorre.
+   In orizzontale resta l'impaginazione del Raspberry (testa a sinistra, colonna a destra). */
+@media (orientation: portrait) {
+  body.mobile { --gap: 8px; --fs: 13px; --head: min(calc(100vw - 2 * var(--gap)), 56vh); }
+  body.mobile #stage { top: var(--gap); left: var(--gap); right: var(--gap); bottom: auto; height: var(--head); }
+  body.mobile #side {
+    top: calc(var(--head) + 2 * var(--gap)); left: var(--gap); right: var(--gap); width: auto;
+    overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    padding: 10px; gap: 8px;
+  }
+  body.mobile #side .cuts { flex: none; overflow: visible; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  body.mobile #side .brand .tag { display: none; }
+  body.mobile #side .brand .razor { width: 34px; }
+  body.mobile #side .brand h1 { font-size: 20px; }
+  body.mobile #side .cut-name { font-size: 24px; }
+  body.mobile #side .cut-desc { -webkit-line-clamp: 3; }
+  body.mobile #side .views button, body.mobile .tabs button { min-height: 40px; }
+  body.mobile .hint { top: calc(var(--gap) + var(--head) / 2); }
+
+  /* scheda "Scelgo questo" */
+  body.mobile #pick { overflow-y: auto; align-items: flex-start; }
+  body.mobile .pk-card { width: 100%; padding: 16px 10px; }
+  body.mobile .pk-name { font-size: 30px; }
+  body.mobile .pk-shots { gap: 6px; }
+  body.mobile .pk-shots figure { max-width: none; }
+  body.mobile .pk-shots figcaption { font-size: 10px; letter-spacing: .06em; }
+
+  /* quiz */
+  body.mobile #quiz { overflow-y: auto; align-items: flex-start; }
+  body.mobile .qz-card { width: 100%; padding: 20px 10px; }
+  body.mobile .qz-q { font-size: 24px; }
+  body.mobile .qz-opts { flex-wrap: wrap; gap: 8px; }
+  body.mobile .qz-opts > button:not(.qz-cut) { flex: 1 1 40%; max-width: none; min-height: 80px; font-size: 15px; }
+  body.mobile .qz-res .qz-cut { flex: 1 1 100%; max-width: 80vw; }
+  body.mobile .qz-opts.qz-faces { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  body.mobile .qz-faces svg { height: 54px; }
+  body.mobile .qz-faces .fn { font-size: 14px; }
+  body.mobile .qz-faces .fh { font-size: 12px; }
+
+  /* standby: la scritta non deve uscire dallo schermo */
+  body.mobile .sb-logo .razor { width: 34vw; }
+  body.mobile .sb-logo h1 { font-size: 10vw; }
+  body.mobile .sb-tag { font-size: 3.2vw; letter-spacing: .12em; padding: 0 12px; }
+  body.mobile .sb-touch, body.mobile .sb-quiz { font-size: 13px; }
+}

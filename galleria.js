@@ -31,6 +31,12 @@ const SPIN_MS = 3200;           // scegliendo un taglio la testa fa un giro comp
 const CUT_EVERY_DEG = 360;      // in vetrina: cambia taglio dopo un giro completo
 
 document.body.classList.add('gallery');
+// telefono/tablet (solo per provarlo adesso: sul Raspberry il browser non si presenta come "Mobile").
+// ?mobile=1 forza la versione telefono, ?mobile=0 la spegne
+const MOBILE = Q.has('mobile') ? Q.get('mobile') !== '0'
+  : /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+    || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));   // iPad recenti
+document.body.classList.toggle('mobile', MOBILE);
 
 const loadImg = (src) => new Promise((ok) => {
   const im = new Image();
