@@ -415,3 +415,14 @@ body.gallery {
   body.mobile .sb-tag { font-size: 3.2vw; letter-spacing: .12em; padding: 0 12px; }
   body.mobile .sb-touch, body.mobile .sb-quiz { font-size: 13px; }
 }
+
+/* ---------- RASPBERRY PI 3 (body.lite, da start.sh lite / ?lite): via gli effetti pesanti per la GPU ----------
+   sfocature, ombre luminose e bagliori animati costano molto sul Pi 3; l'aspetto resta quasi uguale */
+body.lite #pick, body.lite #quiz { backdrop-filter: none; }
+body.lite #pick { background: rgba(4,3,3,.97); }
+body.lite #quiz { background: rgba(4,3,3,.98); }
+body.lite .brand .razor, body.lite .sb-logo .razor, body.lite .sb-logo h1 { filter: none; }
+body.lite .sb-logo h1 { animation: none; }
+body.lite #stage .frame { box-shadow: 0 0 0 1px rgba(0,0,0,.7) inset; }
+body.lite #side .cut { transition: none; }
+body.lite #side .cut.on { box-shadow: 0 0 0 1px var(--red-hi); }

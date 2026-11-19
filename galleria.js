@@ -37,6 +37,11 @@ const MOBILE = Q.has('mobile') ? Q.get('mobile') !== '0'
   : /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
     || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));   // iPad recenti
 document.body.classList.toggle('mobile', MOBILE);
+// ?lite = Raspberry (start.sh lite): pensato per il Pi 3 da 1 GB. Canvas grande quanto le viste (512 px),
+// viste gia' decodificate in memoria (niente scatti girando), testa ferma dietro lo standby,
+// effetti grafici pesanti spenti in style.css (body.lite). PC, telefono e sito restano uguali.
+const LITE = Q.has('lite');
+document.body.classList.toggle('lite', LITE);
 
 const loadImg = (src) => new Promise((ok) => {
   const im = new Image();
@@ -251,7 +256,7 @@ pick.addEventListener('pointerdown', touch);
 
 function fitCanvas() {
   const r = cv.getBoundingClientRect();
-  const px = Math.min(1024, Math.round(r.width * (window.devicePixelRatio || 1)));
+  const px = Math.min(LITE ? 512 : 1024, Math.round(r.width * (window.devicePixelRatio || 1)));
   if (cv.width !== px) { cv.width = px; cv.height = px; }
 }
 window.addEventListener('resize', () => { fitCanvas(); drawnKey = ''; draw(); });
@@ -268,12 +273,22 @@ async function mountCut() {
   if (!c.has) { ctx.clearRect(0, 0, cv.width, cv.height); return; }
   if (!c.frames) {
     // tiene in memoria solo il taglio corrente (il Raspberry ha poca RAM): libera gli altri prima di caricare
-    CUTS.forEach((o) => { if (o !== c) o.frames = null; });
+    CUTS.forEach((o) => {
+      if (o === c || !o.frames) return;
+      o.frames.forEach((b) => b && b.close && b.close());   // ImageBitmap (lite): libera subito la memoria
+      o.frames = null;
+    });
     $('loading').textContent = 'Carico il taglio…'; $('loading').classList.add('on');
-    const fr = await Promise.all(ANGLES.map((_, i) => loadImg(frameSrc(c, i))));
+    let fr = await Promise.all(ANGLES.map((_, i) => loadImg(frameSrc(c, i))));
+    // lite: decodifica le 10 viste una volta sola, cosi' girando la testa il Pi 3 non deve farlo al volo
+    if (LITE && fr.every(Boolean) && window.createImageBitmap)
+      fr = await Promise.all(fr.map((im) => createImageBitmap(im).catch(() => im)));
     if (tok === mountToken) $('loading').classList.remove('on');
     if (!fr.every(Boolean)) { c.has = false; if (tok === mountToken) mountCut(); return; }
-    if (tok !== mountToken) return;   // nel frattempo e' stato scelto un altro taglio: non tenerlo in memoria
+    if (tok !== mountToken) {   // nel frattempo e' stato scelto un altro taglio: non tenerlo in memoria
+      fr.forEach((b) => b && b.close && b.close());
+      return;
+    }
     c.frames = fr;
   }
   if (tok !== mountToken) return;
@@ -365,7 +380,7 @@ function renderList() {
   // porta in vista il taglio scelto (dopo che caratteri e miniature hanno preso la loro misura)
   setTimeout(() => {
     const on = box.querySelector('.cut.on');
-    if (on) box.scrollTo({ top: on.offsetTop - box.offsetTop - (box.clientHeight - on.offsetHeight) / 2, behavior: 'smooth' });
+    if (on) box.scrollTo({ top: on.offsetTop - box.offsetTop - (box.clientHeight - on.offsetHeight) / 2, behavior: LITE ? 'auto' : 'smooth' });
   }, 250);
 }
 
@@ -414,7 +429,8 @@ function tick(now) {
   if (quizOpen && now - lastInput > PICK_IDLE_MS) closeQuiz();
   const modal = pickOpen || quizOpen;
   setStandby(!modal && now - lastInput > STANDBY_MS);
-  const idle = autoSpin && !modal && !dragging && now - lastInput > IDLE_MS && layers.length;
+  // lite: sotto lo standby (che copre tutto) la testa resta ferma, il Pi 3 non lavora per niente
+  const idle = autoSpin && !modal && !dragging && now - lastInput > IDLE_MS && layers.length && !(LITE && standbyOn);
   stage.classList.toggle('attracting', !!idle);
   if (anim) {
     let t = Math.min(1, (now - anim.t0) / anim.dur);
